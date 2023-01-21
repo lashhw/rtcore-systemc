@@ -17,6 +17,7 @@ SC_MODULE(tb_sync_fifo) {
             fifo_out->write(x);
             std::cout << sc_time_stamp() << ": " << x << " written!" << std::endl;
             x++;
+            wait(rand()%3, SC_NS);
         }
     }
     void consumer() {
@@ -25,7 +26,7 @@ SC_MODULE(tb_sync_fifo) {
             std::cout << sc_time_stamp() << ": read request sent!" << std::endl;
             fifo_in->read(x);
             std::cout << sc_time_stamp() << ": " << x << " read!" << std::endl;
-            wait(10, SC_NS);
+            wait(rand()%10, SC_NS);
         }
     }
 };
