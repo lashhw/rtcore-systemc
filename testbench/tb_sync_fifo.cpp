@@ -19,6 +19,7 @@ SC_MODULE(consumer) {
             int x;
             fifo_in->read(x);
             std::cout << name() << " @ " << sc_time_stamp() << ": " << x << " read!" << std::endl;
+            wait(1, SC_NS);
         }
     }
 };
