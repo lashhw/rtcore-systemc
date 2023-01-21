@@ -13,6 +13,7 @@ SC_MODULE(tb_sync_fifo) {
     void producer() {
         int x = 0;
         while (true) {
+            std::cout << sc_time_stamp() << ": write request (" << x << ") sent!" << std::endl;
             fifo_out->write(x);
             std::cout << sc_time_stamp() << ": " << x << " written!" << std::endl;
             x++;
@@ -21,6 +22,7 @@ SC_MODULE(tb_sync_fifo) {
     void consumer() {
         int x;
         while (true) {
+            std::cout << sc_time_stamp() << ": read request sent!" << std::endl;
             fifo_in->read(x);
             std::cout << sc_time_stamp() << ": " << x << " read!" << std::endl;
             wait(10, SC_NS);
