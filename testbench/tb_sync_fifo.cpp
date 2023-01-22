@@ -35,8 +35,9 @@ SC_MODULE(producer) {
             wait(rand()%2, SC_NS);
             std::cout << name() << " @ " << sc_time_stamp() << ": write request (" << curr << ") sent!" << std::endl;
             fifo_out->write(curr);
-            std::cout << name() << " @ " << sc_time_stamp() << ": " << curr << " written!" << std::endl;
+            std::cout << name() << " @ " << sc_time_stamp() << ": write request (" << curr << ") granted!" << std::endl;
             curr++;
+            wait(1, SC_NS);
         }
     }
 };
