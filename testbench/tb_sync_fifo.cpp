@@ -1,7 +1,7 @@
 #include <systemc>
 using namespace sc_core;
 
-#include "../src/sync_fifo.hpp"
+#include "../src/rtcore/sync_fifo.hpp"
 
 constexpr int FIFO_SIZE = 10;
 constexpr int NUM_CONSUMER = 1;
