@@ -42,7 +42,7 @@ SC_MODULE(producer) {
     }
 };
 
-int sc_main(int, char**) {
+int sc_main(int, char **) {
     sync_fifo<int, FIFO_SIZE, NUM_CONSUMER, NUM_PRODUCER> sync_fifo_i("sync_fifo");
     for (int i = 0; i < NUM_CONSUMER; i++) {
         std::string name = "consumer_" + std::to_string(i);
