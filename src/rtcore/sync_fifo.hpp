@@ -34,7 +34,7 @@ public:
     }
 
     // blocking read
-    virtual void read(T &val) {
+    void read(T &val) override {
         int id = num_read_request;
         num_read_request++;
         sc_assert(num_read_request <= num_read);
@@ -50,7 +50,7 @@ public:
     }
 
     // blocking write
-    virtual void write(const T &val) {
+    void write(const T &val) override {
         write_data[num_write_request] = val;
         num_write_request++;
         sc_assert(num_write_request <= num_write);
