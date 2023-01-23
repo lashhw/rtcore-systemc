@@ -3,8 +3,23 @@
 
 #include <bvh/triangle.hpp>
 #include <bvh/sweep_sah_builder.hpp>
-#include "interface/memory_if.hpp"
 #include "third_party/happly/happly.h"
+
+struct mem_payload_t {
+    enum { BBOX, NODE, TRIG_IDX, TRIG } type;
+    int idx;
+    union {
+        float *bbox;
+        bvh::Bvh<float>::IndexType *node;
+        size_t *trig_idx;
+        bvh::Triangle<float> *trig;
+    } response[2];
+};
+
+class memory_if : virtual public sc_interface {
+public:
+    virtual void request(mem_payload_t &payload) = 0;
+};
 
 class memory : public sc_channel,
                public memory_if {
