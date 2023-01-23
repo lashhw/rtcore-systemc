@@ -8,3 +8,4 @@ link_libraries(bvh)
 
 add_executable(tb_sync_fifo testbench/tb_sync_fifo.cpp)
 add_executable(tb_top testbench/tb_top.cpp)
+add_executable(tb_memory testbench/tb_memory.cpp)

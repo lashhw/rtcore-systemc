@@ -1,0 +1,10 @@
+#ifndef RTCORE_SYSTEMC_SHADER_HPP
+#define RTCORE_SYSTEMC_SHADER_HPP
+
+SC_MODULE(shader) {
+    SC_CTOR(shader) {
+
+    }
+};
+
+#endif //RTCORE_SYSTEMC_SHADER_HPP
