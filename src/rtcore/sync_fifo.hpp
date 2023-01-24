@@ -5,6 +5,8 @@ template <typename T>
 class sync_fifo_in_if : virtual public sc_interface {
 public:
     virtual void read(T &) = 0;
+    virtual const sc_event & write_updated_event() = 0;
+    virtual const int & num_elements() = 0;
 };
 
 template <typename T>
@@ -25,7 +27,7 @@ class sync_fifo : public sc_channel,
                   public sync_fifo_out_if<T> {
 public:
     SC_HAS_PROCESS(sync_fifo);
-    sync_fifo(sc_module_name mn) {
+    explicit sync_fifo(sc_module_name mn) : sc_module(mn) {
         curr = 0;
         size = 0;
         num_read_request = 0;
@@ -49,6 +51,14 @@ public:
         val = read_data[id];
     }
 
+    const sc_event & write_updated_event() override {
+        return write_updated;
+    }
+
+    const int & num_elements() override {
+        return size;
+    }
+
     // blocking write
     void write(const T &val) override {
         write_data[num_write_request] = val;
@@ -60,6 +70,13 @@ public:
             write_granted.notify();
         } else
             wait(write_granted);
+    }
+
+    // direct write
+    void direct_write(const T &val) {
+        sc_assert(size < max_size);
+        data[(curr+size)%max_size] = val;
+        size++;
     }
 
 private:

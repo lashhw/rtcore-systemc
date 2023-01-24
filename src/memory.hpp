@@ -4,21 +4,11 @@
 #include <bvh/triangle.hpp>
 #include <bvh/sweep_sah_builder.hpp>
 #include "third_party/happly/happly.h"
-
-struct mem_payload_t {
-    enum { BBOX, NODE, TRIG_IDX, TRIG } type;
-    int idx;
-    union {
-        float *bbox;
-        bvh::Bvh<float>::IndexType *node;
-        size_t *trig_idx;
-        bvh::Triangle<float> *trig;
-    } response[2];
-};
+#include "payload_t.hpp"
 
 class memory_if : virtual public sc_interface {
 public:
-    virtual void request(mem_payload_t &payload) = 0;
+    virtual void request(to_memory_t &payload) = 0;
 };
 
 class memory : public sc_channel,
@@ -46,19 +36,19 @@ public:
         builder.build(global_bbox, bboxes.get(), centers.get(), triangles.size());
     }
 
-    void request(mem_payload_t &payload) override {
+    void request(to_memory_t &payload) override {
         switch (payload.type) {
-            case mem_payload_t::BBOX:
+            case to_memory_t::BBOX:
                 payload.response[0].bbox = bvh.nodes[payload.idx].bounds;
                 break;
-            case mem_payload_t::NODE:
+            case to_memory_t::NODE:
                 payload.response[0].node = &bvh.nodes[payload.idx].primitive_count;
                 payload.response[1].node = &bvh.nodes[payload.idx].first_child_or_primitive;
                 break;
-            case mem_payload_t::TRIG_IDX:
+            case to_memory_t::TRIG_IDX:
                 payload.response[0].trig_idx = &bvh.primitive_indices[payload.idx];
                 break;
-            case mem_payload_t::TRIG:
+            case to_memory_t::TRIG:
                 payload.response[0].trig = &triangles[payload.idx];
                 break;
         }

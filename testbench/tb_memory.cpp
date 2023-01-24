@@ -10,8 +10,8 @@ SC_MODULE(test) {
     }
     void thread() {
         while (true) {
-            mem_payload_t payload{};
-            payload.type = mem_payload_t::BBOX;
+            to_memory_t payload{};
+            payload.type = to_memory_t::BBOX;
             payload.idx = 0;
             memory_port->request(payload);
             for (int i = 0; i < 6; i++)
