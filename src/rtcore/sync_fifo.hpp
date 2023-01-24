@@ -46,9 +46,19 @@ using sync_fifo_in = sc_port<sync_fifo_in_if<T, num_read>>;
 template <typename T, int num_write = 1>
 using sync_fifo_out = sc_port<sync_fifo_out_if<T, num_write>>;
 
+// base channel for sync_fifo
 template<typename T, int max_size, int num_read, int num_write>
-class sync_fifo_base : virtual public sync_fifo_base_in_if {
+class sync_fifo_base : public sc_channel,
+                       virtual public sync_fifo_base_in_if {
 public:
+    SC_CTOR(sync_fifo_base) {
+        curr = 0;
+        size = 0;
+        read_granted_flag = false;
+        write_granted_flag = false;
+        SC_THREAD(main_thread);
+    }
+
     const sc_event & write_updated_event() override {
         return write_updated;
     }
@@ -62,24 +72,22 @@ protected:
         while (true) {
             wait(read_granted | write_granted);
             wait(0.5, SC_NS);
-            bool r = num_read_request == num_read && size >= num_read;
-            bool w = num_write_request == num_write && max_size - size >= num_write;
 
             // read
-            if (r) {
+            if (read_granted_flag) {
                 curr = (curr + num_read) % max_size;
                 size -= num_read;
-                num_read_request = 0;
+                read_granted_flag = false;
                 read_updated.notify(0.5, SC_NS);
             }
 
             // write
-            if (w) {
+            if (write_granted_flag) {
                 for (int i = 0; i < num_write; i++) {
                     data[(curr+size)%max_size] = write_data[i];
                     size++;
                 }
-                num_write_request = 0;
+                write_granted_flag = false;
                 write_updated.notify(0.5, SC_NS);
             }
 
@@ -95,76 +103,58 @@ protected:
     int curr;
     int size;
 
-    T read_data[num_read];
-    int num_read_request;
-
-    T write_data[num_write];
-    int num_write_request;
-
+    bool read_granted_flag;
     sc_event read_granted;
     sc_event read_updated;
+
+    T write_data[num_write];
+    bool write_granted_flag;
     sc_event write_granted;
     sc_event write_updated;
 };
 
+// sync_fifo
 template<typename T, int max_size, int num_read = 1, int num_write = 1>
-class sync_fifo : public sc_channel,
-                  public sync_fifo_base<T, max_size, num_read, num_write>,
+class sync_fifo : public sync_fifo_base<T, max_size, num_read, num_write>,
                   public sync_fifo_in_if<T, num_read>,
                   public sync_fifo_out_if<T, num_write> {
 public:
-    using sync_fifo_base<T, max_size, num_read, num_write>::data;
-    using sync_fifo_base<T, max_size, num_read, num_write>::curr;
-    using sync_fifo_base<T, max_size, num_read, num_write>::size;
-    using sync_fifo_base<T, max_size, num_read, num_write>::read_data;
-    using sync_fifo_base<T, max_size, num_read, num_write>::num_read_request;
-    using sync_fifo_base<T, max_size, num_read, num_write>::write_data;
-    using sync_fifo_base<T, max_size, num_read, num_write>::num_write_request;
-    using sync_fifo_base<T, max_size, num_read, num_write>::read_granted;
-    using sync_fifo_base<T, max_size, num_read, num_write>::read_updated;
-    using sync_fifo_base<T, max_size, num_read, num_write>::write_granted;
-    using sync_fifo_base<T, max_size, num_read, num_write>::write_updated;
-    using sync_fifo_base<T, max_size, num_read, num_write>::main_thread;
+    using sfb = sync_fifo_base<T, max_size, num_read, num_write>;
+    using sfb::data;
+    using sfb::curr;
+    using sfb::size;
+    using sfb::read_granted_flag;
+    using sfb::read_granted;
+    using sfb::read_updated;
+    using sfb::write_data;
+    using sfb::write_granted_flag;
+    using sfb::write_granted;
+    using sfb::write_updated;
 
-    SC_CTOR(sync_fifo) {
-        curr = 0;
-        size = 0;
-        num_read_request = 0;
-        num_write_request = 0;
-        SC_THREAD(main_thread);
-    }
+    sync_fifo(sc_module_name mn) : sfb(mn) { }
 
     // blocking read
-    void read(T &val) override {
-        int id = num_read_request;
-        num_read_request++;
-        sc_assert(num_read_request <= num_read);
-        if (num_read_request == num_read) {
-            while (size < num_read)
-                wait(write_updated);
-            for (int i = 0; i < num_read; i++)
-                read_data[i] = data[(curr+i)%max_size];
-            read_granted.notify();
-        } else
-            wait(read_granted);
-        val = read_data[id];
+    void read(std::array<T, num_read> &val) override {
+        while (size < num_read)
+            wait(write_updated);
+        for (int i = 0; i < num_read; i++)
+            val[i] = data[(curr+i)%max_size];
+        read_granted_flag = true;
+        read_granted.notify();
     }
 
     // blocking write
-    void write(const T &val) override {
-        write_data[num_write_request] = val;
-        num_write_request++;
-        sc_assert(num_write_request <= num_write);
-        if (num_write_request == num_write) {
-            while (max_size - size < num_write)
-                wait(read_updated);
-            write_granted.notify();
-        } else
-            wait(write_granted);
+    void write(const std::array<T, num_read> &val) override {
+        while (max_size - size < num_write)
+            wait(read_updated);
+        for (int i = 0; i < num_write; i++)
+            write_data[i] = val[i];
+        write_granted_flag = true;
+        write_granted.notify();
     }
 
     // direct write
-    void direct_write(const T &val) {
+    void direct_write(const std::array<T, num_read> &val) {
         sc_assert(size < max_size);
         data[(curr+size)%max_size] = val;
         size++;
