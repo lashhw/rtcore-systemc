@@ -18,10 +18,10 @@ SC_MODULE(consumer) {
             std::cout << name() << " @ " << sc_time_stamp() << ": read request sent!" << std::endl;
             int val[NUM_CONSUMER];
             fifo_in->read(val);
-            std::cout << name() << " @ " << sc_time_stamp() << ": ";
+            std::cout << name() << " @ " << sc_time_stamp() << ": (";
             for (int i : val)
                 std::cout << i << " ";
-            std::cout << "read!" << std::endl;
+            std::cout << ") read!" << std::endl;
             wait(1, SC_NS);
         }
     }
