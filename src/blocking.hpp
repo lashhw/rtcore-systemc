@@ -7,7 +7,7 @@ class blocking_in_if : virtual public sc_interface {
 public:
     virtual void read(T &) = 0;
     virtual const sc_event &data_written_event() const = 0;
-    virtual const bool &data_valid() const = 0;
+    virtual const bool &data_written() const = 0;
 };
 
 // blocking write interface
@@ -32,38 +32,41 @@ class blocking : public sc_channel,
                  public blocking_out_if<T> {
 public:
     SC_CTOR(blocking) {
-        m_data_valid = false;
+        waiting = false;
     }
 
     void read(T &val) override {
-        while (!m_data_valid)
-            wait(m_data_written);
-        val = m_data;
-        m_data_valid = false;
-        m_data_read.notify();
+        block();
+        val = data;
     }
 
     const sc_event &data_written_event() const override {
-        return m_data_written;
+        return trigger;
     }
 
-    const bool &data_valid() const override {
-        return m_data_valid;
+    const bool &data_written() const override {
+        return waiting;
     }
 
     void write(const T &val) override {
-        while (m_data_valid)
-            wait(m_data_read);
-        m_data = val;
-        m_data_valid = true;
-        m_data_written.notify();
+        data = val;
+        block();
     }
 
 private:
-    bool m_data_valid;
-    T m_data;
-    sc_event m_data_written;
-    sc_event m_data_read;
+    void block() {
+        if (!waiting) {
+            waiting = true;
+            wait(trigger);
+            waiting = false;
+        } else {
+            trigger.notify();
+        }
+    }
+
+    bool waiting;
+    sc_event trigger;
+    T data;
 };
 
 #endif //RTCORE_SYSTEMC_BLOCKING_HPP
