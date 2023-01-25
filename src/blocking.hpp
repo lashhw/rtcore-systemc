@@ -33,6 +33,7 @@ class blocking : public sc_channel,
 public:
     SC_CTOR(blocking) {
         waiting = false;
+        m_data_written = false;
     }
 
     void read(T &val) override {
@@ -41,16 +42,19 @@ public:
     }
 
     const sc_event &data_written_event() const override {
-        return trigger;
+        return m_data_written_event;
     }
 
     const bool &data_written() const override {
-        return waiting;
+        return m_data_written;
     }
 
     void write(const T &val) override {
         data = val;
+        m_data_written = true;
+        m_data_written_event.notify();
         block();
+        m_data_written = false;
     }
 
 private:
@@ -67,6 +71,9 @@ private:
     bool waiting;
     sc_event trigger;
     T data;
+
+    bool m_data_written;
+    sc_event m_data_written_event;
 };
 
 #endif //RTCORE_SYSTEMC_BLOCKING_HPP
