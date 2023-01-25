@@ -11,7 +11,7 @@ public:
     virtual void request(to_memory_t &payload) = 0;
 };
 
-class memory : public sc_channel,
+class memory : public sc_module,
                public memory_if {
 public:
     SC_HAS_PROCESS(memory);

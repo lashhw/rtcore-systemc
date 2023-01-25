@@ -7,8 +7,8 @@
 template <typename T, int num_read>
 class sync_fifo_in_if : virtual public sc_interface {
 public:
-    virtual const sc_event & write_updated_event() = 0;
-    virtual const int & num_elements() = 0;
+    virtual const sc_event &write_updated_event() const = 0;
+    virtual const int &num_elements() const = 0;
     virtual void read(T *) = 0;
 };
 
@@ -41,11 +41,11 @@ public:
         SC_THREAD(main_thread);
     }
 
-    const sc_event & write_updated_event() override {
+    const sc_event &write_updated_event() const override {
         return write_updated;
     }
 
-    const int & num_elements() override {
+    const int &num_elements() const override {
         return size;
     }
 
