@@ -16,11 +16,14 @@ SC_MODULE(master) {
         int curr = start;
         while (true){
             wait(rand()%5, SC_NS);
-            std::cout << name() << " @ " << sc_time_stamp() << ": request sent!" << std::endl;
+            std::cout << name() << " @ " << sc_time_stamp() << ": waiting to send request..." << std::endl;
             req->write(curr);
+            std::cout << name() << " @ " << sc_time_stamp() << ": request sent!" << std::endl;
             curr++;
             int val;
+            std::cout << name() << " @ " << sc_time_stamp() << ": waiting to receive response..." << std::endl;
             resp->read(val);
+            std::cout << name() << " @ " << sc_time_stamp() << ": response received!" << std::endl;
             wait(1, SC_NS);
         }
     }
@@ -37,10 +40,13 @@ SC_MODULE(slave) {
     void thread() {
         while (true) {
             int val;
-            std::cout << name() << " @ " << sc_time_stamp() << ": request sent!" << std::endl;
+            std::cout << name() << " @ " << sc_time_stamp() << ": waiting to receive request..." << std::endl;
             req->read(val);
+            std::cout << name() << " @ " << sc_time_stamp() << ": request received!" << std::endl;
             wait(5, SC_NS);
+            std::cout << name() << " @ " << sc_time_stamp() << ": waiting to send response..." << std::endl;
             resp->write(val);
+            std::cout << name() << " @ " << sc_time_stamp() << ": response sent!" << std::endl;
         }
     }
 };
@@ -59,7 +65,7 @@ int sc_main(int, char **) {
     blocking<int> master_3_to_arbiter("master_3_to_arbiter");
     blocking<int> arbiter_to_master_3("arbiter_to_master_3");
     blocking<int> arbiter_to_slave("arbiter_to_slave");
-    blocking<int> slave_to_arbiter("slave_to_arbieter");
+    blocking<int> slave_to_arbiter("slave_to_arbiter");
 
     master_1.req(master_1_to_arbiter);
     master_1.resp(arbiter_to_master_1);
