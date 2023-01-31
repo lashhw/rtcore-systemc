@@ -32,12 +32,19 @@ class blocking : public sc_channel,
                  public blocking_out_if<T> {
 public:
     SC_CTOR(blocking) {
-        waiting = false;
+        m_data_read = false;
         m_data_written = false;
     }
 
     void read(T &val) override {
-        block();
+        if (m_data_written) {
+            m_data_read_event.notify();
+            m_data_written = false;
+        } else {
+            m_data_read = true;
+            wait(m_data_written_event);
+            m_data_read = false;
+        }
         val = data;
     }
 
@@ -51,27 +58,18 @@ public:
 
     void write(const T &val) override {
         data = val;
-        m_data_written = true;
-        m_data_written_event.notify();
-        block();
-        m_data_written = false;
-    }
-
-private:
-    void block() {
-        if (!waiting) {
-            waiting = true;
-            wait(trigger);
-            waiting = false;
+        if (m_data_read) {
+            m_data_written_event.notify();
         } else {
-            trigger.notify();
+            m_data_written = true;
+            wait(m_data_read_event);
         }
     }
 
-    bool waiting;
-    sc_event trigger;
+private:
     T data;
-
+    bool m_data_read;
+    sc_event m_data_read_event;
     bool m_data_written;
     sc_event m_data_written_event;
 };
