@@ -63,7 +63,7 @@ public:
 
     // this method should only be used when num_read = 1
     void read(T &val) override {
-        static_assert(num_read == 1);
+        sc_assert(num_read == 1);
         read(&val);
     }
 
@@ -79,7 +79,7 @@ public:
 
     // this method should only be used when num_write = 1
     void write(const T &val) override {
-        static_assert(num_write == 1);
+        sc_assert(num_write == 1);
         write(&val);
     }
 
@@ -94,7 +94,7 @@ public:
 
     // this method should only be used when num_write = 1
     void direct_write(const T &val) {
-        static_assert(num_write == 1);
+        sc_assert(num_write == 1);
         direct_write(&val);
     }
 
