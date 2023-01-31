@@ -45,8 +45,8 @@ public:
     }
 
     void read(T &val) override {
+        m_data_read_event.notify();
         if (m_data_written) {
-            m_data_read_event.notify();
             m_data_written = false;
         } else {
             m_data_read = true;
@@ -57,8 +57,8 @@ public:
 
     void write(const T &val) override {
         data = val;
+        m_data_written_event.notify();
         if (m_data_read) {
-            m_data_written_event.notify();
             m_data_read = false;
         } else {
             m_data_written = true;
