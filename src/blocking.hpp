@@ -5,9 +5,9 @@
 template <typename T>
 class blocking_in_if : virtual public sc_interface {
 public:
-    virtual void read(T &) = 0;
     virtual const sc_event &data_written_event() const = 0;
     virtual const bool &data_written() const = 0;
+    virtual void read(T &) = 0;
 };
 
 // blocking write interface
@@ -36,6 +36,14 @@ public:
         m_data_written = false;
     }
 
+    const sc_event &data_written_event() const override {
+        return m_data_written_event;
+    }
+
+    const bool &data_written() const override {
+        return m_data_written;
+    }
+
     void read(T &val) override {
         if (m_data_written) {
             m_data_read_event.notify();
@@ -45,14 +53,6 @@ public:
             wait(m_data_written_event);
         }
         val = data;
-    }
-
-    const sc_event &data_written_event() const override {
-        return m_data_written_event;
-    }
-
-    const bool &data_written() const override {
-        return m_data_written;
     }
 
     void write(const T &val) override {
