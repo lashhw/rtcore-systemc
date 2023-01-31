@@ -7,9 +7,10 @@
 template <typename T, int num_read>
 class sync_fifo_in_if : virtual public sc_interface {
 public:
-    virtual const sc_event &write_updated_event() const = 0;
+    virtual const sc_event &data_written_event() const = 0;
     virtual const int &num_elements() const = 0;
     virtual void read(T *) = 0;
+    virtual void read(T &) = 0;
 };
 
 // output interface for sync_fifo
@@ -17,6 +18,7 @@ template <typename T, int num_write>
 class sync_fifo_out_if : virtual public sc_interface {
 public:
     virtual void write(const T *) = 0;
+    virtual void write(const T &) = 0;
 };
 
 // alias for sc_port<sync_fifo_in_if<T, num_read>>
@@ -27,7 +29,7 @@ using sync_fifo_in = sc_port<sync_fifo_in_if<T, num_read>>;
 template <typename T, int num_write = 1>
 using sync_fifo_out = sc_port<sync_fifo_out_if<T, num_write>>;
 
-// the channel which implements sync_fifo_in_if and sync_fifo_out_if
+// the channel that implements sync_fifo_in_if and sync_fifo_out_if
 template<typename T, int max_size, int num_read = 1, int num_write = 1>
 class sync_fifo : public sc_channel,
                   public sync_fifo_in_if<T, num_read>,
@@ -41,7 +43,7 @@ public:
         SC_THREAD(main_thread);
     }
 
-    const sc_event &write_updated_event() const override {
+    const sc_event &data_written_event() const override {
         return write_updated;
     }
 
@@ -59,6 +61,12 @@ public:
         read_granted.notify();
     }
 
+    // this method should only be used when num_read = 1
+    void read(T &val) override {
+        static_assert(num_read == 1);
+        read(&val);
+    }
+
     // blocking write
     void write(const T *val) override {
         while (max_size - size < num_write)
@@ -69,13 +77,25 @@ public:
         write_granted.notify();
     }
 
+    // this method should only be used when num_write = 1
+    void write(const T &val) override {
+        static_assert(num_write == 1);
+        write(&val);
+    }
+
     // direct write
     void direct_write(const T *val) {
-        sc_assert(size + num_write <= max_size);
+        sc_assert(max_size - size >= num_write);
         for (int i = 0; i < num_write; i++) {
-            data[(curr+size)%max_size] = val;
+            data[(curr+size)%max_size] = val[i];
             size++;
         }
+    }
+
+    // this method should only be used when num_write = 1
+    void direct_write(const T &val) {
+        static_assert(num_write == 1);
+        direct_write(&val);
     }
 
 private:
