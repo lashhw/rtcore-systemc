@@ -122,11 +122,13 @@ private:
                 write_updated.notify(half_cycle);
             }
 
+#ifndef NDEBUG
             // print
             std::cout << "sync_fifo @ " << sc_time_stamp() << ": ";
             for (int i = 0; i < size; i++)
                 std::cout << data[(curr+i)%max_size] << " ";
             std::cout << std::endl;
+#endif
         }
     }
 
