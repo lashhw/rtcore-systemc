@@ -43,7 +43,6 @@ public:
         } else {
             m_data_read = true;
             wait(m_data_written_event);
-            m_data_read = false;
         }
         val = data;
     }
@@ -60,6 +59,7 @@ public:
         data = val;
         if (m_data_read) {
             m_data_written_event.notify();
+            m_data_read = false;
         } else {
             m_data_written = true;
             wait(m_data_read_event);
