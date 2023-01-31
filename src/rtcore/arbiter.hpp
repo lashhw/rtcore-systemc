@@ -5,8 +5,7 @@
 #include "../misc.hpp"
 
 template <typename TReq, typename TResp, int num_slaves>
-class arbiter : public sc_module {
-public:
+struct arbiter : public sc_module {
     blocking_in<TReq> slave_from[num_slaves];
     blocking_out<TReq> master_to;
     blocking_in<TResp> master_from;
@@ -16,7 +15,6 @@ public:
         SC_THREAD(thread);
     }
 
-private:
     void thread() {
         sc_event_or_list data_written_event_list;
         for (int i = 0; i < num_slaves; i++)
