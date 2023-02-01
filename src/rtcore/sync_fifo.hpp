@@ -11,11 +11,7 @@ public:
     virtual const int &num_elements() const = 0;
     virtual void read(T *) = 0;
     virtual void read(T &) = 0;
-    T read() {
-        T tmp;
-        read(tmp);
-        return tmp;
-    }
+    virtual T read() = 0;
 };
 
 // output interface for sync_fifo
@@ -70,6 +66,12 @@ public:
     void read(T &val) override {
         sc_assert(num_read == 1);
         read(&val);
+    }
+
+    T read() override {
+        T tmp;
+        read(tmp);
+        return tmp;
     }
 
     // blocking write
