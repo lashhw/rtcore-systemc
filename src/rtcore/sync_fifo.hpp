@@ -1,25 +1,22 @@
 #ifndef RTCORE_SYSTEMC_SYNC_FIFO_HPP
 #define RTCORE_SYSTEMC_SYNC_FIFO_HPP
 
+#include "../blocking.hpp"
 #include "../misc.hpp"
 
 // input interface for sync_fifo
 template <typename T, int num_read>
-class sync_fifo_in_if : virtual public sc_interface {
+class sync_fifo_in_if : public blocking_in_if<T> {
 public:
-    virtual const sc_event &data_written_event() const = 0;
     virtual const int &num_elements() const = 0;
     virtual void read(T *) = 0;
-    virtual void read(T &) = 0;
-    virtual T read() = 0;
 };
 
 // output interface for sync_fifo
 template <typename T, int num_write>
-class sync_fifo_out_if : virtual public sc_interface {
+class sync_fifo_out_if : public blocking_out_if<T> {
 public:
     virtual void write(const T *) = 0;
-    virtual void write(const T &) = 0;
 };
 
 // alias for sc_port<sync_fifo_in_if<T, num_read>>
@@ -46,6 +43,10 @@ public:
 
     const sc_event &data_written_event() const override {
         return write_updated;
+    }
+
+    bool data_written() const override {
+        return num_elements() > 0;
     }
 
     const int &num_elements() const override {

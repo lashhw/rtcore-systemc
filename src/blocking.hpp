@@ -6,7 +6,7 @@ template <typename T>
 class blocking_in_if : virtual public sc_interface {
 public:
     virtual const sc_event &data_written_event() const = 0;
-    virtual const bool &data_written() const = 0;
+    virtual bool data_written() const = 0;
     virtual void read(T &) = 0;
     virtual T read() = 0;
 };
@@ -41,7 +41,7 @@ public:
         return m_data_written_event;
     }
 
-    const bool &data_written() const override {
+    bool data_written() const override {
         return m_data_written;
     }
 
