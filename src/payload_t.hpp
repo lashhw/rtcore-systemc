@@ -31,6 +31,10 @@ struct to_shader_t {
 
 };
 
+struct to_bbox_t {
+
+};
+
 struct to_ist_ctrl_t {
     ray_and_id_t ray_and_id;
     int num_trigs;

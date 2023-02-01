@@ -7,7 +7,6 @@
 #include "lp.hpp"
 #include "hp.hpp"
 #include "ist_ctrl.hpp"
-#include "ist.hpp"
 
 SC_MODULE(rtcore) {
     sc_export<blocking<bvh::Ray<float>>> p_ray;
@@ -36,13 +35,12 @@ SC_MODULE(rtcore) {
     blocking<from_memory_t> b_memory_to_arbiter;
 
     sync_fifo<to_bbox_ctrl_t, fifo_size> f_trv_ctrl_to_bbox_ctrl;
-    sync_fifo<to_bbox_ctrl_t, fifo_size, num_lp, 1> f_bbox_ctrl_to_lp;
+    sync_fifo<to_bbox_t, fifo_size, num_lp, 1> f_bbox_ctrl_to_lp;
     sync_fifo<to_trv_ctrl_t, fifo_size, 1, num_lp> f_lp_to_trv_ctrl;
-    sync_fifo<to_bbox_ctrl_t, fifo_size, num_hp, 1> f_bbox_ctrl_to_hp;
+    sync_fifo<to_bbox_t, fifo_size, num_hp, 1> f_bbox_ctrl_to_hp;
     sync_fifo<to_trv_ctrl_t, fifo_size, 1, num_hp> f_hp_to_trv_ctrl;
     sync_fifo<to_shader_t, fifo_size> f_trv_ctrl_to_shader;
     sync_fifo<to_ist_ctrl_t, fifo_size> f_trv_ctrl_to_ist_ctrl;
-    sync_fifo<to_bbox_ctrl_t, fifo_size> f_ist_ctrl_to_ist;
 
     rtcore(sc_module_name mn) : sc_module(mn),
                                 m_arbiter("m_arbiter"),
@@ -68,8 +66,7 @@ SC_MODULE(rtcore) {
                                 f_bbox_ctrl_to_hp("f_bbox_ctrl_to_hp"),
                                 f_hp_to_trv_ctrl("f_hp_to_trv_ctrl"),
                                 f_trv_ctrl_to_shader("f_trv_ctrl_to_shader"),
-                                f_trv_ctrl_to_ist_ctrl("f_trv_ctrl_to_ist_ctrl"),
-                                f_ist_ctrl_to_ist("f_ist_ctrl_to_ist") {
+                                f_trv_ctrl_to_ist_ctrl("f_trv_ctrl_to_ist_ctrl") {
         // link arbiter
         m_arbiter.master_to(b_arbiter_to_memory);
         m_arbiter.master_from(b_memory_to_arbiter);
@@ -90,6 +87,21 @@ SC_MODULE(rtcore) {
         m_trv_ctrl.p_lp(f_lp_to_trv_ctrl);
         m_trv_ctrl.p_hp(f_hp_to_trv_ctrl);
         m_trv_ctrl.p_ist_ctrl(f_trv_ctrl_to_ist_ctrl);
+
+        // link bbox_ctrl
+        m_bbox_ctrl.p_memory_req(b_bbox_ctrl_to_arbiter);
+        m_bbox_ctrl.p_memory_resp(b_arbiter_to_bbox_ctrl);
+        m_bbox_ctrl.p_trv_ctrl(f_trv_ctrl_to_bbox_ctrl);
+        m_bbox_ctrl.p_lp(f_bbox_ctrl_to_lp);
+        m_bbox_ctrl.p_hp(f_bbox_ctrl_to_hp);
+
+        // link lp
+        m_lp.p_bbox_ctrl(f_bbox_ctrl_to_lp);
+        m_lp.p_trv_ctrl(f_lp_to_trv_ctrl);
+
+        // link hp
+        m_hp.p_bbox_ctrl(f_bbox_ctrl_to_hp);
+        m_hp.p_trv_ctrl(f_hp_to_trv_ctrl);
     }
 };
 
