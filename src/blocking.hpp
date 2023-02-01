@@ -8,6 +8,11 @@ public:
     virtual const sc_event &data_written_event() const = 0;
     virtual const bool &data_written() const = 0;
     virtual void read(T &) = 0;
+    T read() {
+        T tmp;
+        read(tmp);
+        return tmp;
+    }
 };
 
 // blocking write interface

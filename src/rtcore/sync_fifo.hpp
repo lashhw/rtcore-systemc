@@ -11,6 +11,11 @@ public:
     virtual const int &num_elements() const = 0;
     virtual void read(T *) = 0;
     virtual void read(T &) = 0;
+    T read() {
+        T tmp;
+        read(tmp);
+        return tmp;
+    }
 };
 
 // output interface for sync_fifo
