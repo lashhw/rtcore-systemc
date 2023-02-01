@@ -8,8 +8,8 @@
 #include "blocking.hpp"
 
 SC_MODULE(memory) {
-    blocking_in<to_memory_t> req_p;
-    blocking_out<from_memory_t> resp_p;
+    blocking_in<to_memory_t> p_req;
+    blocking_out<from_memory_t> p_resp;
 
     SC_HAS_PROCESS(memory);
     memory(sc_module_name mn, const char *model_ply_path) : sc_module(mn) {
@@ -37,7 +37,7 @@ SC_MODULE(memory) {
 
     void thread() {
         while (true) {
-            to_memory_t req = req_p->read();
+            to_memory_t req = p_req->read();
             from_memory_t resp;
             switch (req.type) {
                 case to_memory_t::BBOX:

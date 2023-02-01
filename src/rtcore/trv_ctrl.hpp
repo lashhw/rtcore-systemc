@@ -4,19 +4,19 @@
 #include "../payload_t.hpp"
 #include "arbiter.hpp"
 
-struct trv_ctrl : public sc_module {
-    sync_fifo_in<bvh::Ray<float>> shader_in_req_p;
-    sync_fifo_out<int> shader_in_resp_p;
-    sync_fifo_in<to_trv_ctrl_t> lp_in_p;
-    sync_fifo_in<to_trv_ctrl_t> hp_in_p;
-    sync_fifo_in<to_trv_ctrl_t> ist_in_p;
-    sync_fifo_out<to_shader_t> shader_out_p;
-    sync_fifo_out<to_bbox_ctrl_t> bbox_ctrl_out_p;
-    sync_fifo_out<to_ist_ctrl_t> ist_ctrl_out_p;
-    sync_fifo_out<to_memory_t> memory_out_req_p;
-    sync_fifo_in<from_memory_t> memory_out_resp_p;
+SC_MODULE(trv_ctrl) {
+    blocking_in<to_trv_ctrl_t> p_shader_req;
+    blocking_out<int> p_shader_resp;
+    sync_fifo_in<to_trv_ctrl_t> p_lp;
+    sync_fifo_in<to_trv_ctrl_t> p_hp;
+    sync_fifo_in<to_trv_ctrl_t> p_ist;
+    sync_fifo_out<to_shader_t> p_result;
+    sync_fifo_out<to_bbox_ctrl_t> p_bbox_ctrl;
+    sync_fifo_out<to_ist_ctrl_t> p_ist_ctrl;
+    blocking_out<to_memory_t> p_memory_req;
+    blocking_in<from_memory_t> p_memory_resp;
 
-    arbiter<sync_fifo_in, blocking_out, to_trv_ctrl_t, void, 4> trv_ctrl_arbiter;
+    arbiter<to_trv_ctrl_t, void, 4> trv_ctrl_arbiter;
     blocking<to_trv_ctrl_t> trv_ctrl_arbiter_out;
     blocking<to_b_thread_t> c_thread_to_b_thread;
 
@@ -28,9 +28,9 @@ struct trv_ctrl : public sc_module {
     trv_ctrl(sc_module_name mn) : sc_module(mn),
                                   trv_ctrl_arbiter("trv_ctrl_arbiter") {
         trv_ctrl_arbiter.slave_from[0](shader_fifo);
-        trv_ctrl_arbiter.slave_from[1](lp_in_p);
-        trv_ctrl_arbiter.slave_from[2](hp_in_p);
-        trv_ctrl_arbiter.slave_from[3](ist_in_p);
+        trv_ctrl_arbiter.slave_from[1](p_lp);
+        trv_ctrl_arbiter.slave_from[2](p_hp);
+        trv_ctrl_arbiter.slave_from[3](p_ist);
         trv_ctrl_arbiter.master_to(trv_ctrl_arbiter_out);
         for (int i = 0; i < num_working_rays; i++)
             free_fifo.direct_write(i);
@@ -41,34 +41,34 @@ struct trv_ctrl : public sc_module {
 
     void a_thread() {
         while (true) {
-            bvh::Ray<float> ray = shader_in_req_p->read();
+            bvh::Ray<float> ray = p_shader_req->read();
             int id = free_fifo.read();
             ray_and_id_t ray_and_id{ray, id};
             to_trv_ctrl_t to_trv_ctrl;
             to_trv_ctrl.type = to_trv_ctrl_t::SHADER;
             to_trv_ctrl.ray_and_id = ray_and_id;
             shader_fifo.write(to_trv_ctrl);
-            shader_in_resp_p->write(id);
+            p_shader_resp->write(id);
         }
     }
 
     void b_thread() {
         while (true) {
             to_b_thread_t req = c_thread_to_b_thread.read();
-            memory_out_req_p->write(req.to_memory);
-            from_memory_t resp = memory_out_resp_p->read();
+            p_memory_req->write(req.to_memory);
+            from_memory_t resp = p_memory_resp->read();
             size_t num_trigs = resp.node[0];
             if (num_trigs == 0) {
                 to_bbox_ctrl_t to_bbox_ctrl{};
                 to_bbox_ctrl.ray_and_id = req.ray_and_id;
                 to_bbox_ctrl.node_idx = resp.node[1];
-                bbox_ctrl_out_p->write(to_bbox_ctrl);
+                p_bbox_ctrl->write(to_bbox_ctrl);
             } else {
                 to_ist_ctrl_t to_ist_ctrl{};
                 to_ist_ctrl.ray_and_id = req.ray_and_id;
                 to_ist_ctrl.num_trigs = num_trigs;
                 to_ist_ctrl.first_trig_idx = resp.node[1];
-                ist_ctrl_out_p->write(to_ist_ctrl);
+                p_ist_ctrl->write(to_ist_ctrl);
             }
         }
     }
