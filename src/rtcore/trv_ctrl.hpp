@@ -4,7 +4,6 @@
 #include "../payload_t.hpp"
 #include "arbiter.hpp"
 
-template <int num_working_rays>
 struct trv_ctrl : public sc_module {
     sync_fifo_in<bvh::Ray<float>> shader_in_req_p;
     sync_fifo_out<int> shader_in_resp_p;
