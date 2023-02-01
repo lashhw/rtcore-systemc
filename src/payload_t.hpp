@@ -3,14 +3,38 @@
 
 struct ray_and_id_t {
     bvh::Ray<float> ray;
-    int id;
+    int ray_id;
+};
+
+struct to_bbox_ctrl_t {
+    ray_and_id_t ray_and_id;
+    int node_idx;
+};
+
+struct from_bbox_t {
+    ray_and_id_t ray_and_id;
+    int left_node_idx;
+    bool hit[2];
+    bool left_first;
 };
 
 struct to_trv_ctrl_t {
-    enum { SHADER, LP, HP, IST } type;
+    enum { SHADER, BBOX, IST } type;
     union {
         ray_and_id_t ray_and_id;
-    } payload;
+        from_bbox_t from_bbox;
+    };
+};
+
+struct to_shader_t {
+    int ray_id;
+
+};
+
+struct to_ist_ctrl_t {
+    ray_and_id_t ray_and_id;
+    int num_trigs;
+    int first_trig_idx;
 };
 
 struct to_memory_t {
@@ -18,13 +42,18 @@ struct to_memory_t {
     int idx;
 };
 
+struct to_b_thread_t {
+    ray_and_id_t ray_and_id;
+    to_memory_t to_memory;
+};
+
 struct from_memory_t {
     union {
-        float *bbox;
-        bvh::Bvh<float>::IndexType *node;
-        size_t *trig_idx;
-        bvh::Triangle<float> *trig;
-    } response[2];
+        float bbox;
+        int node[2];
+        int trig_idx;
+        bvh::Triangle<float> trig;
+    };
 };
 
 
