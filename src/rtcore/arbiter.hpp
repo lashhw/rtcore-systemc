@@ -5,16 +5,12 @@
 #include "../misc.hpp"
 
 // arbiter with response
-template <template<typename> typename TInPort,
-          template<typename> typename TOutPort,
-          typename TReq,
-          typename TResp,
-          int num_slaves>
+template<typename TReq, typename TResp, int num_slaves>
 struct arbiter : public sc_module {
-    TInPort<TReq> slave_from[num_slaves];
-    TOutPort<TReq> master_to;
-    TInPort<TResp> master_from;
-    TOutPort<TResp> slave_to[num_slaves];
+    blocking_in<TReq> slave_from[num_slaves];
+    blocking_out<TReq> master_to;
+    blocking_in<TResp> master_from;
+    blocking_out<TResp> slave_to[num_slaves];
 
     SC_CTOR(arbiter) {
         SC_THREAD(thread);
@@ -43,13 +39,10 @@ struct arbiter : public sc_module {
 };
 
 // arbiter without response
-template <template<typename> typename TInPort,
-          template<typename> typename TOutPort,
-          typename TReq,
-          int num_slaves>
-struct arbiter<TInPort, TOutPort, TReq, void, num_slaves> : public sc_module {
-    TInPort<TReq> slave_from[num_slaves];
-    TOutPort<TReq> master_to;
+template<typename TReq, int num_slaves>
+struct arbiter<TReq, void, num_slaves> : public sc_module {
+    blocking_in<TReq> slave_from[num_slaves];
+    blocking_out<TReq> master_to;
 
     SC_CTOR(arbiter) {
         SC_THREAD(thread);
