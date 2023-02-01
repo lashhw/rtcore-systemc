@@ -7,7 +7,7 @@ using namespace sc_core;
 
 int sc_main(int, char **) {
     memory memory_i("memory", "kitchen.ply");
-    shader shader_i("shader");
+    shader shader_i("shader", "ray_queries.bin");
     rtcore rtcore_i("rtcore");
 
     sc_start();

@@ -1,7 +1,8 @@
 #ifndef RTCORE_SYSTEMC_SHADER_HPP
 #define RTCORE_SYSTEMC_SHADER_HPP
 
-template <int num_working_rays>
+#include "misc.hpp"
+
 SC_MODULE(shader) {
     blocking_out<bvh::Ray<float>> p_ray;
     blocking_in<int> p_id;
