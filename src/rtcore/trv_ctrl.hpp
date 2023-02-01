@@ -128,6 +128,7 @@ struct trv_ctrl : public sc_module {
                     } else {
                         // don't hit bbox
                         if (stk[chosen.ray_and_id.ray_id].empty()) {
+                            // TODO: impl this
                             to_shader_t to_shader;
                         } else {
                             to_b_thread_t to_b_thread;

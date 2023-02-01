@@ -10,6 +10,7 @@ int sc_main(int, char **) {
     shader shader_i("shader");
     rtcore rtcore_i("rtcore");
 
-    sc_start(100, SC_NS);
+    sc_start();
+
     return 0;
 }

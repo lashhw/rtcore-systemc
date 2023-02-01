@@ -49,7 +49,7 @@ struct to_b_thread_t {
 
 struct from_memory_t {
     union {
-        float bbox;
+        float bbox[6];
         int node[2];
         int trig_idx;
         bvh::Triangle<float> trig;

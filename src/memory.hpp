@@ -5,15 +5,12 @@
 #include <bvh/sweep_sah_builder.hpp>
 #include "third_party/happly/happly.h"
 #include "payload_t.hpp"
+#include "blocking.hpp"
 
-class memory_if : virtual public sc_interface {
-public:
-    virtual void request(to_memory_t &payload) = 0;
-};
+SC_MODULE(memory) {
+    blocking_in<to_memory_t> req_p;
+    blocking_out<from_memory_t> resp_p;
 
-class memory : public sc_module,
-               public memory_if {
-public:
     SC_HAS_PROCESS(memory);
     memory(sc_module_name mn, const char *model_ply_path) : sc_module(mn) {
         happly::PLYData ply_data(model_ply_path);
@@ -34,27 +31,33 @@ public:
 
         bvh::SweepSahBuilder<bvh::Bvh<float>> builder(bvh);
         builder.build(global_bbox, bboxes.get(), centers.get(), triangles.size());
+
+        SC_THREAD(thread);
     }
 
-    void request(to_memory_t &payload) override {
-        switch (payload.type) {
-            case to_memory_t::BBOX:
-                payload.response[0].bbox = bvh.nodes[payload.idx].bounds;
-                break;
-            case to_memory_t::NODE:
-                payload.response[0].node = &bvh.nodes[payload.idx].primitive_count;
-                payload.response[1].node = &bvh.nodes[payload.idx].first_child_or_primitive;
-                break;
-            case to_memory_t::TRIG_IDX:
-                payload.response[0].trig_idx = &bvh.primitive_indices[payload.idx];
-                break;
-            case to_memory_t::TRIG:
-                payload.response[0].trig = &triangles[payload.idx];
-                break;
+    void thread() {
+        while (true) {
+            to_memory_t req = req_p->read();
+            from_memory_t resp;
+            switch (req.type) {
+                case to_memory_t::BBOX:
+                    for (int i = 0; i < 6; i++)
+                        resp.bbox[i] = bvh.nodes[req.idx].bounds[i];
+                    break;
+                case to_memory_t::NODE:
+                    resp.node[0] = bvh.nodes[req.idx].primitive_count;
+                    resp.node[1] = bvh.nodes[req.idx].first_child_or_primitive;
+                    break;
+                case to_memory_t::TRIG_IDX:
+                    resp.trig_idx = bvh.primitive_indices[req.idx];
+                    break;
+                case to_memory_t::TRIG:
+                    resp.trig = triangles[req.idx];
+                    break;
+            }
         }
     }
 
-private:
     std::vector<bvh::Triangle<float>> triangles;
     bvh::Bvh<float> bvh;
 };
