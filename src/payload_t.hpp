@@ -44,7 +44,9 @@ struct to_trv_ctrl_t {
 };
 
 struct to_bbox_t {
-
+    ray_and_id_t ray_and_id;
+    float left_bbox[6];
+    float right_bbox[6];
 };
 
 struct to_ist_ctrl_t {
