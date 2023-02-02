@@ -9,7 +9,7 @@ SC_MODULE(trv_ctrl) {
     blocking_in<from_memory_t> p_memory_resp;
     blocking_in<ray_t> p_ray;
     blocking_out<int> p_id;
-    sync_fifo_out<to_shader_t> p_result;
+    sync_fifo_out<result_t> p_result;
     sync_fifo_out<to_bbox_ctrl_t> p_bbox_ctrl;
     sync_fifo_in<to_trv_ctrl_t> p_lp;
     sync_fifo_in<to_trv_ctrl_t> p_hp;

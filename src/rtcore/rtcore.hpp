@@ -13,7 +13,7 @@ SC_MODULE(rtcore) {
     sc_export<blocking<from_memory_t>> p_mem_resp;
     sc_export<blocking<ray_t>> p_ray;
     sc_export<blocking<int>> p_id;
-    sc_export<sync_fifo<to_shader_t, fifo_size>> p_result;
+    sc_export<sync_fifo<result_t, fifo_size>> p_result;
 
     arbiter<to_memory_t, from_memory_t, 3> m_arbiter;
     trv_ctrl m_trv_ctrl;
@@ -38,7 +38,7 @@ SC_MODULE(rtcore) {
     sync_fifo<to_trv_ctrl_t, fifo_size, 1, num_lp> f_lp_to_trv_ctrl;
     sync_fifo<to_bbox_t, fifo_size, num_hp, 1> f_bbox_ctrl_to_hp;
     sync_fifo<to_trv_ctrl_t, fifo_size, 1, num_hp> f_hp_to_trv_ctrl;
-    sync_fifo<to_shader_t, fifo_size> f_trv_ctrl_to_shader;
+    sync_fifo<result_t, fifo_size> f_trv_ctrl_to_shader;
     sync_fifo<to_ist_ctrl_t, fifo_size> f_trv_ctrl_to_ist_ctrl;
     sync_fifo<to_trv_ctrl_t, fifo_size> f_ist_ctrl_to_trv_ctrl;
 

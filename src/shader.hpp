@@ -6,7 +6,7 @@
 SC_MODULE(shader) {
     blocking_out<ray_t> p_ray;
     blocking_in<int> p_id;
-    blocking_in<to_shader_t> p_result;
+    blocking_in<result_t> p_result;
 
     SC_HAS_PROCESS(shader);
     shader(sc_module_name mn, const char *ray_queries_path) : sc_module(mn) {
@@ -30,7 +30,7 @@ SC_MODULE(shader) {
 
     void thread_2() {
         while (true) {
-            to_shader_t result = p_result->read();
+            result_t result = p_result->read();
             std::cout << name() << "@" << sc_time_stamp() << ": result received, id=" << result.id << std::endl;
         }
     }

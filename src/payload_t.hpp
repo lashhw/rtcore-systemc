@@ -8,6 +8,10 @@ struct ray_t {
     float t_max;
 };
 
+struct result_t {
+    int id;
+};
+
 struct trig_t {
     float p0[3];
     float e1[3];
@@ -37,11 +41,6 @@ struct to_trv_ctrl_t {
         ray_and_id_t ray_and_id;
         from_bbox_t from_bbox;
     };
-};
-
-struct to_shader_t {
-    int id;
-
 };
 
 struct to_bbox_t {
