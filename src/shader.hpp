@@ -28,7 +28,7 @@ SC_MODULE(shader) {
             p_ray->write(ray);
             int id = p_id->read();
             processing_ray[id] = ray;
-            std::cout << name() << "@" << sc_time_stamp() << ": ray send, id=" << id << std::endl;
+            std::cout << name() << "@" << sc_time_stamp() << ": ray sent, id=" << id << std::endl;
         }
     }
 
