@@ -17,6 +17,8 @@ SC_MODULE(shader) {
 
     void thread_1() {
         std::ifstream ray_queries_file(ray_queries_path, std::ios::in | std::ios::binary);
+        sc_assert(ray_queries_file.good());
+
         float r[7];
         while (ray_queries_file.read(reinterpret_cast<char*>(&r), 7*sizeof(float))) {
             ray_t ray{r[0], r[1], r[2], r[3], r[4], r[5], 0.0f, r[6]};
