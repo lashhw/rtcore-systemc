@@ -9,11 +9,11 @@
 #include "ist_ctrl.hpp"
 
 SC_MODULE(rtcore) {
-    sc_export<blocking<bvh::Ray<float>>> p_ray;
-    sc_export<blocking<int>> p_id;
-    sc_export<blocking<to_shader_t>> p_result;
     sc_export<blocking<to_memory_t>> p_mem_req;
     sc_export<blocking<from_memory_t>> p_mem_resp;
+    sc_export<blocking<bvh::Ray<float>>> p_ray;
+    sc_export<blocking<int>> p_id;
+    sc_export<sync_fifo<to_shader_t, fifo_size>> p_result;
 
     arbiter<to_memory_t, from_memory_t, 3> m_arbiter;
     trv_ctrl m_trv_ctrl;
@@ -30,7 +30,7 @@ SC_MODULE(rtcore) {
     blocking<from_memory_t> b_arbiter_to_bbox_ctrl;
     blocking<to_memory_t> b_ist_ctrl_to_arbiter;
     blocking<from_memory_t> b_arbiter_to_ist_ctrl;
-    blocking<to_trv_ctrl_t> b_shader_to_trv_ctrl;
+    blocking<bvh::Ray<float>> b_shader_to_trv_ctrl;
     blocking<int> b_trv_ctrl_to_shader;
 
     sync_fifo<to_bbox_ctrl_t, fifo_size> f_trv_ctrl_to_bbox_ctrl;
@@ -67,6 +67,13 @@ SC_MODULE(rtcore) {
                                 f_trv_ctrl_to_shader("f_trv_ctrl_to_shader"),
                                 f_trv_ctrl_to_ist_ctrl("f_trv_ctrl_to_ist_ctrl"),
                                 f_ist_ctrl_to_trv_ctrl("f_ist_ctrl_to_trv_ctrl") {
+        // link export
+        p_mem_req(b_arbiter_to_memory);
+        p_mem_resp(b_memory_to_arbiter);
+        p_ray(b_shader_to_trv_ctrl);
+        p_id(b_trv_ctrl_to_shader);
+        p_result(f_trv_ctrl_to_shader);
+
         // link arbiter
         m_arbiter.master_to(b_arbiter_to_memory);
         m_arbiter.master_from(b_memory_to_arbiter);
@@ -80,8 +87,8 @@ SC_MODULE(rtcore) {
         // link trv_ctrl
         m_trv_ctrl.p_memory_req(b_trv_ctrl_to_arbiter);
         m_trv_ctrl.p_memory_resp(b_arbiter_to_trv_ctrl);
-        m_trv_ctrl.p_shader_req(b_shader_to_trv_ctrl);
-        m_trv_ctrl.p_shader_resp(b_trv_ctrl_to_shader);
+        m_trv_ctrl.p_ray(b_shader_to_trv_ctrl);
+        m_trv_ctrl.p_id(b_trv_ctrl_to_shader);
         m_trv_ctrl.p_result(f_trv_ctrl_to_shader);
         m_trv_ctrl.p_bbox_ctrl(f_trv_ctrl_to_bbox_ctrl);
         m_trv_ctrl.p_lp(f_lp_to_trv_ctrl);

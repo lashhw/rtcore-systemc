@@ -5,18 +5,21 @@
 #include "arbiter.hpp"
 
 SC_MODULE(trv_ctrl) {
-    blocking_in<to_trv_ctrl_t> p_shader_req;
-    blocking_out<int> p_shader_resp;
-    sync_fifo_in<to_trv_ctrl_t> p_lp;
-    sync_fifo_in<to_trv_ctrl_t> p_hp;
-    sync_fifo_in<to_trv_ctrl_t> p_ist;
-    sync_fifo_out<to_shader_t> p_result;
-    sync_fifo_out<to_bbox_ctrl_t> p_bbox_ctrl;
-    sync_fifo_out<to_ist_ctrl_t> p_ist_ctrl_req;
-    sync_fifo_in<to_trv_ctrl_t> p_ist_ctrl_resp;
     blocking_out<to_memory_t> p_memory_req;
     blocking_in<from_memory_t> p_memory_resp;
+    blocking_in<bvh::Ray<float>> p_ray;
+    blocking_out<int> p_id;
+    sync_fifo_out<to_shader_t> p_result;
+    sync_fifo_out<to_bbox_ctrl_t> p_bbox_ctrl;
+    sync_fifo_in<to_trv_ctrl_t> p_lp;
+    sync_fifo_in<to_trv_ctrl_t> p_hp;
+    sync_fifo_out<to_ist_ctrl_t> p_ist_ctrl_req;
+    sync_fifo_in<to_trv_ctrl_t> p_ist_ctrl_resp;
 
+    SC_CTOR(trv_ctrl) {
+
+    }
+    /*
     arbiter<to_trv_ctrl_t, void, 4> trv_ctrl_arbiter;
     blocking<to_trv_ctrl_t> trv_ctrl_arbiter_out;
     blocking<to_b_thread_t> c_thread_to_b_thread;
@@ -152,6 +155,7 @@ SC_MODULE(trv_ctrl) {
             }
         }
     }
+     */
 };
 
 #endif //RTCORE_SYSTEMC_TRV_CTRL_HPP
