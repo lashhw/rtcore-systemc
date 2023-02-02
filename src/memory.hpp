@@ -32,10 +32,10 @@ SC_MODULE(memory) {
         bvh::SweepSahBuilder<bvh::Bvh<float>> builder(bvh);
         builder.build(global_bbox, bboxes.get(), centers.get(), triangles.size());
 
-        SC_THREAD(thread);
+        SC_THREAD(thread_1);
     }
 
-    void thread() {
+    void thread_1() {
         while (true) {
             to_memory_t req = p_req->read();
             from_memory_t resp;
