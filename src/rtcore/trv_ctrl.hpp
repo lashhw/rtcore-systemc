@@ -20,7 +20,6 @@ SC_MODULE(trv_ctrl) {
 
     blocking<to_trv_ctrl_t> b_to_thread_3;
     blocking<to_thread_2_t> b_thread_3_to_thread_2;
-    blocking<from_memory_t> b_thread_2_to_thread_3;
 
     sync_fifo<to_trv_ctrl_t, num_working_rays> f_shader_fifo;
     sync_fifo<int, num_working_rays> f_free_fifo;
@@ -32,7 +31,6 @@ SC_MODULE(trv_ctrl) {
                                   m_arbiter("m_arbiter"),
                                   b_to_thread_3("b_to_thread_3"),
                                   b_thread_3_to_thread_2("b_thread_3_to_thread_2"),
-                                  b_thread_2_to_thread_3("b_thread_2_to_thread_3"),
                                   f_shader_fifo("f_shader_fifo"),
                                   f_free_fifo("f_free_fifo") {
         m_arbiter.slave_from[0](f_shader_fifo);
@@ -64,116 +62,110 @@ SC_MODULE(trv_ctrl) {
     }
 
     void thread_2() {
-
-    }
-
-    void thread_3() {
-
-    }
-    /*
-    void a_thread() {
-    }
-
-    void b_thread() {
         while (true) {
-            to_b_thread_t req = c_thread_to_b_thread.read();
+            to_thread_2_t req = b_thread_3_to_thread_2.read();
+            wait(cycle);
             p_memory_req->write(req.to_memory);
+            wait(cycle);
             from_memory_t resp = p_memory_resp->read();
-            size_t num_trigs = resp.node[0];
+            int num_trigs = resp.node[0];
             if (num_trigs == 0) {
-                to_bbox_ctrl_t to_bbox_ctrl{};
+                to_bbox_ctrl_t to_bbox_ctrl;
                 to_bbox_ctrl.ray_and_id = req.ray_and_id;
                 to_bbox_ctrl.node_idx = resp.node[1];
                 p_bbox_ctrl->write(to_bbox_ctrl);
             } else {
-                to_ist_ctrl_t to_ist_ctrl{};
+                to_ist_ctrl_t to_ist_ctrl;
                 to_ist_ctrl.ray_and_id = req.ray_and_id;
                 to_ist_ctrl.num_trigs = num_trigs;
                 to_ist_ctrl.first_trig_idx = resp.node[1];
-                p_ist_ctrl->write(to_ist_ctrl);
+                p_ist_ctrl_req->write(to_ist_ctrl);
             }
+            wait(cycle);
         }
     }
 
-    void c_thread() {
+    void thread_3() {
         while (true) {
-            to_trv_ctrl_t chosen = trv_ctrl_arbiter_out.read();
-            switch(chosen.type) {
+            to_trv_ctrl_t req = b_to_thread_3.read();
+            switch(req.type) {
                 case to_trv_ctrl_t::SHADER: {
-                    to_b_thread_t to_b_thread;
-                    to_b_thread.ray_and_id = chosen.ray_and_id;
-                    to_b_thread.to_memory.type = to_memory_t::NODE;
-                    to_b_thread.to_memory.idx = 0;
-                    c_thread_to_b_thread.write(to_b_thread);
+                    to_thread_2_t to_thread_2;
+                    to_thread_2.ray_and_id = req.ray_and_id;
+                    to_thread_2.to_memory.type = to_memory_t::NODE;
+                    to_thread_2.to_memory.idx = 0;
+                    b_thread_3_to_thread_2.write(to_thread_2);
+                    wait(cycle);
                     break;
                 }
                 case to_trv_ctrl_t::BBOX: {
-                    int left_node_idx = chosen.from_bbox.left_node_idx;
+                    int left_node_idx = req.from_bbox.left_node_idx;
                     int right_node_idx = left_node_idx + 1;
-                    // TODO: add stack latency
-                    if (chosen.from_bbox.hit[0]) {
-                        if (chosen.from_bbox.hit[1]) {
+                    if (req.from_bbox.hit[0]) {
+                        if (req.from_bbox.hit[1]) {
                             // hit two bbox
-                            if (chosen.from_bbox.left_first) {
+                            if (req.from_bbox.left_first) {
                                 // hit left bbox first
-                                stk[chosen.ray_and_id.id].push(right_node_idx);
-                                to_b_thread_t to_b_thread;
-                                to_b_thread.ray_and_id = chosen.ray_and_id;
-                                to_b_thread.to_memory.type = to_memory_t::NODE;
-                                to_b_thread.to_memory.idx = left_node_idx;
-                                c_thread_to_b_thread.write(to_b_thread);
+                                stk[req.from_bbox.ray_and_id.id].push(right_node_idx);
+                                wait(cycle);
+                                to_thread_2_t to_thread_2;
+                                to_thread_2.ray_and_id = req.from_bbox.ray_and_id;
+                                to_thread_2.to_memory.type = to_memory_t::NODE;
+                                to_thread_2.to_memory.idx = left_node_idx;
+                                b_thread_3_to_thread_2.write(to_thread_2);
+                                wait(cycle);
                             } else {
                                 // hit right bbox first
-                                stk[chosen.ray_and_id.id].push(left_node_idx);
-                                to_b_thread_t to_b_thread;
-                                to_b_thread.ray_and_id = chosen.ray_and_id;
-                                to_b_thread.to_memory.type = to_memory_t::NODE;
-                                to_b_thread.to_memory.idx = right_node_idx;
-                                c_thread_to_b_thread.write(to_b_thread);
+                                stk[req.from_bbox.ray_and_id.id].push(left_node_idx);
+                                wait(cycle);
+                                to_thread_2_t to_thread_2;
+                                to_thread_2.ray_and_id = req.from_bbox.ray_and_id;
+                                to_thread_2.to_memory.type = to_memory_t::NODE;
+                                to_thread_2.to_memory.idx = right_node_idx;
+                                b_thread_3_to_thread_2.write(to_thread_2);
+                                wait(cycle);
                             }
                         } else {
                             // only hit left bbox
-                            to_b_thread_t to_b_thread;
-                            to_b_thread.ray_and_id = chosen.ray_and_id;
-                            to_b_thread.to_memory.type = to_memory_t::NODE;
-                            to_b_thread.to_memory.idx = left_node_idx;
-                            c_thread_to_b_thread.write(to_b_thread);
+                            to_thread_2_t to_thread_2;
+                            to_thread_2.ray_and_id = req.from_bbox.ray_and_id;
+                            to_thread_2.to_memory.type = to_memory_t::NODE;
+                            to_thread_2.to_memory.idx = left_node_idx;
+                            b_thread_3_to_thread_2.write(to_thread_2);
+                            wait(cycle);
                         }
-                    } else if (chosen.from_bbox.hit[1]) {
+                    } else if (req.from_bbox.hit[1]) {
                         // only hit right bbox
-                        to_b_thread_t to_b_thread;
-                        to_b_thread.ray_and_id = chosen.ray_and_id;
-                        to_b_thread.to_memory.type = to_memory_t::NODE;
-                        to_b_thread.to_memory.idx = right_node_idx;
-                        c_thread_to_b_thread.write(to_b_thread);
+                        to_thread_2_t to_thread_2;
+                        to_thread_2.ray_and_id = req.from_bbox.ray_and_id;
+                        to_thread_2.to_memory.type = to_memory_t::NODE;
+                        to_thread_2.to_memory.idx = right_node_idx;
+                        b_thread_3_to_thread_2.write(to_thread_2);
+                        wait(cycle);
                     } else {
                         // don't hit bbox
-                        if (stk[chosen.ray_and_id.id].empty()) {
+                        if (stk[req.from_bbox.ray_and_id.id].empty()) {
                             // TODO: impl this
-                            to_shader_t to_shader;
                         } else {
-                            to_b_thread_t to_b_thread;
-                            to_b_thread.ray_and_id = chosen.ray_and_id;
-                            to_b_thread.to_memory.type = to_memory_t::NODE;
-                            to_b_thread.to_memory.idx = stk[chosen.ray_and_id.id].top();
-                            stk[chosen.ray_and_id.id].pop();
-                            c_thread_to_b_thread.write(to_b_thread);
+                            int stk_top = stk[req.from_bbox.ray_and_id.id].top();
+                            stk[req.from_bbox.ray_and_id.id].pop();
+                            wait(cycle);
+                            to_thread_2_t to_thread_2;
+                            to_thread_2.ray_and_id = req.from_bbox.ray_and_id;
+                            to_thread_2.to_memory.type = to_memory_t::NODE;
+                            to_thread_2.to_memory.idx = stk_top;
+                            b_thread_3_to_thread_2.write(to_thread_2);
+                            wait(cycle);
                         }
                     }
-                    to_bbox_ctrl_t to_bbox_ctrl;
-                    to_bbox_ctrl.ray_and_id = chosen.ray_and_id;
                     break;
                 }
                 case to_trv_ctrl_t::IST: {
                     break;
                 }
-                default: {
-                    sc_assert(false);
-                }
             }
         }
     }
-     */
 };
 
 #endif //RTCORE_SYSTEMC_TRV_CTRL_HPP
