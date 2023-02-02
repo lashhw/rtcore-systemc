@@ -9,40 +9,42 @@ SC_MODULE(trv_ctrl) {
     blocking_in<from_memory_t> p_memory_resp;
     blocking_in<ray_t> p_ray;
     blocking_out<int> p_id;
-    sync_fifo_out<result_t> p_result;
-    sync_fifo_out<to_bbox_ctrl_t> p_bbox_ctrl;
-    sync_fifo_in<to_trv_ctrl_t> p_lp;
-    sync_fifo_in<to_trv_ctrl_t> p_hp;
-    sync_fifo_out<to_ist_ctrl_t> p_ist_ctrl_req;
-    sync_fifo_in<to_trv_ctrl_t> p_ist_ctrl_resp;
+    blocking_out<result_t> p_result;
+    blocking_out<to_bbox_ctrl_t> p_bbox_ctrl;
+    blocking_in<to_trv_ctrl_t> p_lp;
+    blocking_in<to_trv_ctrl_t> p_hp;
+    blocking_out<to_ist_ctrl_t> p_ist_ctrl_req;
+    blocking_in<to_trv_ctrl_t> p_ist_ctrl_resp;
 
-    SC_CTOR(trv_ctrl) {
+    arbiter<to_trv_ctrl_t, void, 4> m_arbiter;
 
-    }
-    /*
-    arbiter<to_trv_ctrl_t, void, 4> trv_ctrl_arbiter;
-    blocking<to_trv_ctrl_t> trv_ctrl_arbiter_out;
-    blocking<to_b_thread_t> c_thread_to_b_thread;
+    blocking<to_trv_ctrl_t> b_to_thread_3;
+    blocking<to_thread_2_t> b_thread_3_to_thread_2;
+    blocking<from_memory_t> b_thread_2_to_thread_3;
 
-    sync_fifo<to_trv_ctrl_t, num_working_rays> shader_fifo;
-    sync_fifo<int, num_working_rays> free_fifo;
+    sync_fifo<to_trv_ctrl_t, num_working_rays> f_shader_fifo;
+    sync_fifo<int, num_working_rays> f_free_fifo;
+
     std::stack<int> stk[num_working_rays];
 
     SC_HAS_PROCESS(trv_ctrl);
     trv_ctrl(sc_module_name mn) : sc_module(mn),
-                                  trv_ctrl_arbiter("trv_ctrl_arbiter") {
-        trv_ctrl_arbiter.slave_from[0](shader_fifo);
-        trv_ctrl_arbiter.slave_from[1](p_lp);
-        trv_ctrl_arbiter.slave_from[2](p_hp);
-        trv_ctrl_arbiter.slave_from[3](p_ist);
-        trv_ctrl_arbiter.master_to(trv_ctrl_arbiter_out);
+                                  m_arbiter("m_arbiter"),
+                                  b_to_thread_3("b_to_thread_3"),
+                                  b_thread_3_to_thread_2("b_thread_3_to_thread_2"),
+                                  b_thread_2_to_thread_3("b_thread_2_to_thread_3"),
+                                  f_shader_fifo("f_shader_fifo"),
+                                  f_free_fifo("f_free_fifo") {
+        m_arbiter.slave_from[0](f_shader_fifo);
+        m_arbiter.slave_from[1](p_lp);
+        m_arbiter.slave_from[2](p_hp);
+        m_arbiter.slave_from[3](p_ist_ctrl_resp);
+        m_arbiter.master_to(b_to_thread_3);
         for (int i = 0; i < num_working_rays; i++)
-            free_fifo.direct_write(i);
-        SC_THREAD(a_thread);
-        SC_THREAD(b_thread);
-        SC_THREAD(c_thread);
+            f_free_fifo.direct_write(i);
     }
 
+    /*
     void a_thread() {
         while (true) {
             ray_t ray = p_shader_req->read();

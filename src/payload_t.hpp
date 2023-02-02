@@ -58,7 +58,7 @@ struct to_memory_t {
     int idx;
 };
 
-struct to_b_thread_t {
+struct to_thread_2_t {
     ray_and_id_t ray_and_id;
     to_memory_t to_memory;
 };
