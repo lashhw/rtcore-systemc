@@ -12,7 +12,8 @@ SC_MODULE(trv_ctrl) {
     sync_fifo_in<to_trv_ctrl_t> p_ist;
     sync_fifo_out<to_shader_t> p_result;
     sync_fifo_out<to_bbox_ctrl_t> p_bbox_ctrl;
-    sync_fifo_out<to_ist_ctrl_t> p_ist_ctrl;
+    sync_fifo_out<to_ist_ctrl_t> p_ist_ctrl_req;
+    sync_fifo_in<to_trv_ctrl_t> p_ist_ctrl_resp;
     blocking_out<to_memory_t> p_memory_req;
     blocking_in<from_memory_t> p_memory_resp;
 

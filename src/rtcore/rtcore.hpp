@@ -86,7 +86,8 @@ SC_MODULE(rtcore) {
         m_trv_ctrl.p_bbox_ctrl(f_trv_ctrl_to_bbox_ctrl);
         m_trv_ctrl.p_lp(f_lp_to_trv_ctrl);
         m_trv_ctrl.p_hp(f_hp_to_trv_ctrl);
-        m_trv_ctrl.p_ist_ctrl(f_trv_ctrl_to_ist_ctrl);
+        m_trv_ctrl.p_ist_ctrl_req(f_trv_ctrl_to_ist_ctrl);
+        m_trv_ctrl.p_ist_ctrl_resp(f_ist_ctrl_to_trv_ctrl);
 
         // link bbox_ctrl
         m_bbox_ctrl.p_memory_req(b_bbox_ctrl_to_arbiter);
@@ -104,6 +105,8 @@ SC_MODULE(rtcore) {
         m_hp.p_trv_ctrl(f_hp_to_trv_ctrl);
 
         // link ist_ctrl
+        m_ist_ctrl.p_mem_req(b_ist_ctrl_to_arbiter);
+        m_ist_ctrl.p_mem_resp(b_arbiter_to_ist_ctrl);
         m_ist_ctrl.p_trv_ctrl_in(f_trv_ctrl_to_ist_ctrl);
         m_ist_ctrl.p_trv_ctrl_out(f_ist_ctrl_to_trv_ctrl);
     }
