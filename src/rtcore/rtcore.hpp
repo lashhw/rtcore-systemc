@@ -21,7 +21,6 @@ SC_MODULE(rtcore) {
     lp m_lp;
     hp m_hp;
     ist_ctrl m_ist_ctrl;
-    ist m_ist;
 
     blocking<to_trv_ctrl_t> b_shader_to_trv_ctrl;
     blocking<int> b_trv_ctrl_to_shader;
@@ -41,6 +40,7 @@ SC_MODULE(rtcore) {
     sync_fifo<to_trv_ctrl_t, fifo_size, 1, num_hp> f_hp_to_trv_ctrl;
     sync_fifo<to_shader_t, fifo_size> f_trv_ctrl_to_shader;
     sync_fifo<to_ist_ctrl_t, fifo_size> f_trv_ctrl_to_ist_ctrl;
+    sync_fifo<to_trv_ctrl_t, fifo_size> f_ist_ctrl_to_trv_ctrl;
 
     rtcore(sc_module_name mn) : sc_module(mn),
                                 m_arbiter("m_arbiter"),
@@ -49,7 +49,6 @@ SC_MODULE(rtcore) {
                                 m_lp("m_lp"),
                                 m_hp("m_hp"),
                                 m_ist_ctrl("m_ist_ctrl"),
-                                m_ist("m_ist"),
                                 b_shader_to_trv_ctrl("b_shader_to_trv_ctrl"),
                                 b_trv_ctrl_to_shader("b_trv_ctrl_to_shader"),
                                 b_trv_ctrl_to_arbiter("b_trv_ctrl_to_arbiter"),
@@ -66,7 +65,8 @@ SC_MODULE(rtcore) {
                                 f_bbox_ctrl_to_hp("f_bbox_ctrl_to_hp"),
                                 f_hp_to_trv_ctrl("f_hp_to_trv_ctrl"),
                                 f_trv_ctrl_to_shader("f_trv_ctrl_to_shader"),
-                                f_trv_ctrl_to_ist_ctrl("f_trv_ctrl_to_ist_ctrl") {
+                                f_trv_ctrl_to_ist_ctrl("f_trv_ctrl_to_ist_ctrl"),
+                                f_ist_ctrl_to_trv_ctrl("f_ist_ctrl_to_trv_ctrl") {
         // link arbiter
         m_arbiter.master_to(b_arbiter_to_memory);
         m_arbiter.master_from(b_memory_to_arbiter);
@@ -102,6 +102,10 @@ SC_MODULE(rtcore) {
         // link hp
         m_hp.p_bbox_ctrl(f_bbox_ctrl_to_hp);
         m_hp.p_trv_ctrl(f_hp_to_trv_ctrl);
+
+        // link ist_ctrl
+        m_ist_ctrl.p_trv_ctrl_in(f_trv_ctrl_to_ist_ctrl);
+        m_ist_ctrl.p_trv_ctrl_out(f_ist_ctrl_to_trv_ctrl);
     }
 };
 
