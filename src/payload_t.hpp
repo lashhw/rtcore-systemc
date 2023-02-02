@@ -1,8 +1,19 @@
 #ifndef RTCORE_SYSTEMC_PAYLOAD_T_HPP
 #define RTCORE_SYSTEMC_PAYLOAD_T_HPP
 
+struct ray_t {
+    float origin_x;
+    float origin_y;
+    float origin_z;
+    float dir_x;
+    float dir_y;
+    float dir_z;
+    float t_min;
+    float t_max;
+};
+
 struct ray_and_id_t {
-    bvh::Ray<float> ray;
+    ray_t ray;
     int id;
 };
 

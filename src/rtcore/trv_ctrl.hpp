@@ -7,7 +7,7 @@
 SC_MODULE(trv_ctrl) {
     blocking_out<to_memory_t> p_memory_req;
     blocking_in<from_memory_t> p_memory_resp;
-    blocking_in<bvh::Ray<float>> p_ray;
+    blocking_in<ray_t> p_ray;
     blocking_out<int> p_id;
     sync_fifo_out<to_shader_t> p_result;
     sync_fifo_out<to_bbox_ctrl_t> p_bbox_ctrl;
@@ -45,7 +45,7 @@ SC_MODULE(trv_ctrl) {
 
     void a_thread() {
         while (true) {
-            bvh::Ray<float> ray = p_shader_req->read();
+            ray_t ray = p_shader_req->read();
             int id = free_fifo.read();
             ray_and_id_t ray_and_id{ray, id};
             to_trv_ctrl_t to_trv_ctrl;

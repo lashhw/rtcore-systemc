@@ -11,7 +11,7 @@
 SC_MODULE(rtcore) {
     sc_export<blocking<to_memory_t>> p_mem_req;
     sc_export<blocking<from_memory_t>> p_mem_resp;
-    sc_export<blocking<bvh::Ray<float>>> p_ray;
+    sc_export<blocking<ray_t>> p_ray;
     sc_export<blocking<int>> p_id;
     sc_export<sync_fifo<to_shader_t, fifo_size>> p_result;
 
@@ -30,7 +30,7 @@ SC_MODULE(rtcore) {
     blocking<from_memory_t> b_arbiter_to_bbox_ctrl;
     blocking<to_memory_t> b_ist_ctrl_to_arbiter;
     blocking<from_memory_t> b_arbiter_to_ist_ctrl;
-    blocking<bvh::Ray<float>> b_shader_to_trv_ctrl;
+    blocking<ray_t> b_shader_to_trv_ctrl;
     blocking<int> b_trv_ctrl_to_shader;
 
     sync_fifo<to_bbox_ctrl_t, fifo_size> f_trv_ctrl_to_bbox_ctrl;
