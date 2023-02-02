@@ -3,7 +3,7 @@
 
 struct ray_and_id_t {
     bvh::Ray<float> ray;
-    int ray_id;
+    int id;
 };
 
 struct to_bbox_ctrl_t {
@@ -27,7 +27,7 @@ struct to_trv_ctrl_t {
 };
 
 struct to_shader_t {
-    int ray_id;
+    int id;
 
 };
 

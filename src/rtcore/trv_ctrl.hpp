@@ -94,7 +94,7 @@ SC_MODULE(trv_ctrl) {
                             // hit two bbox
                             if (chosen.from_bbox.left_first) {
                                 // hit left bbox first
-                                stk[chosen.ray_and_id.ray_id].push(right_node_idx);
+                                stk[chosen.ray_and_id.id].push(right_node_idx);
                                 to_b_thread_t to_b_thread;
                                 to_b_thread.ray_and_id = chosen.ray_and_id;
                                 to_b_thread.to_memory.type = to_memory_t::NODE;
@@ -102,7 +102,7 @@ SC_MODULE(trv_ctrl) {
                                 c_thread_to_b_thread.write(to_b_thread);
                             } else {
                                 // hit right bbox first
-                                stk[chosen.ray_and_id.ray_id].push(left_node_idx);
+                                stk[chosen.ray_and_id.id].push(left_node_idx);
                                 to_b_thread_t to_b_thread;
                                 to_b_thread.ray_and_id = chosen.ray_and_id;
                                 to_b_thread.to_memory.type = to_memory_t::NODE;
@@ -126,15 +126,15 @@ SC_MODULE(trv_ctrl) {
                         c_thread_to_b_thread.write(to_b_thread);
                     } else {
                         // don't hit bbox
-                        if (stk[chosen.ray_and_id.ray_id].empty()) {
+                        if (stk[chosen.ray_and_id.id].empty()) {
                             // TODO: impl this
                             to_shader_t to_shader;
                         } else {
                             to_b_thread_t to_b_thread;
                             to_b_thread.ray_and_id = chosen.ray_and_id;
                             to_b_thread.to_memory.type = to_memory_t::NODE;
-                            to_b_thread.to_memory.idx = stk[chosen.ray_and_id.ray_id].top();
-                            stk[chosen.ray_and_id.ray_id].pop();
+                            to_b_thread.to_memory.idx = stk[chosen.ray_and_id.id].top();
+                            stk[chosen.ray_and_id.id].pop();
                             c_thread_to_b_thread.write(to_b_thread);
                         }
                     }

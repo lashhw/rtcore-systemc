@@ -28,14 +28,14 @@ SC_MODULE(shader) {
             p_ray->write(ray);
             int id = p_id->read();
             processing_ray[id] = ray;
-            std::cout << name() << "@" << sc_time_stamp() << ": id=" << id << std::endl;
+            std::cout << name() << "@" << sc_time_stamp() << ": ray send, id=" << id << std::endl;
         }
     }
 
     void thread_2() {
         while (true) {
             to_shader_t result = p_result->read();
-            bvh::Ray<float> ray = processing_ray[result.ray_id];
+            std::cout << name() << "@" << sc_time_stamp() << ": result received, id=" << result.id << std::endl;
         }
     }
 
