@@ -22,16 +22,16 @@ SC_MODULE(rtcore) {
     hp m_hp;
     ist_ctrl m_ist_ctrl;
 
-    blocking<to_trv_ctrl_t> b_shader_to_trv_ctrl;
-    blocking<int> b_trv_ctrl_to_shader;
+    blocking<to_memory_t> b_arbiter_to_memory;
+    blocking<from_memory_t> b_memory_to_arbiter;
     blocking<to_memory_t> b_trv_ctrl_to_arbiter;
     blocking<from_memory_t> b_arbiter_to_trv_ctrl;
     blocking<to_memory_t> b_bbox_ctrl_to_arbiter;
     blocking<from_memory_t> b_arbiter_to_bbox_ctrl;
     blocking<to_memory_t> b_ist_ctrl_to_arbiter;
     blocking<from_memory_t> b_arbiter_to_ist_ctrl;
-    blocking<to_memory_t> b_arbiter_to_memory;
-    blocking<from_memory_t> b_memory_to_arbiter;
+    blocking<to_trv_ctrl_t> b_shader_to_trv_ctrl;
+    blocking<int> b_trv_ctrl_to_shader;
 
     sync_fifo<to_bbox_ctrl_t, fifo_size> f_trv_ctrl_to_bbox_ctrl;
     sync_fifo<to_bbox_t, fifo_size, num_lp, 1> f_bbox_ctrl_to_lp;
@@ -49,16 +49,16 @@ SC_MODULE(rtcore) {
                                 m_lp("m_lp"),
                                 m_hp("m_hp"),
                                 m_ist_ctrl("m_ist_ctrl"),
-                                b_shader_to_trv_ctrl("b_shader_to_trv_ctrl"),
-                                b_trv_ctrl_to_shader("b_trv_ctrl_to_shader"),
+                                b_arbiter_to_memory("b_arbiter_to_memory"),
+                                b_memory_to_arbiter("b_memory_to_arbiter"),
                                 b_trv_ctrl_to_arbiter("b_trv_ctrl_to_arbiter"),
                                 b_arbiter_to_trv_ctrl("b_arbiter_to_trv_ctrl"),
                                 b_bbox_ctrl_to_arbiter("b_bbox_ctrl_to_arbiter"),
                                 b_arbiter_to_bbox_ctrl("b_arbiter_to_bbox_ctrl"),
                                 b_ist_ctrl_to_arbiter("b_ist_ctrl_to_arbiter"),
                                 b_arbiter_to_ist_ctrl("b_arbiter_to_ist_ctrl"),
-                                b_arbiter_to_memory("b_arbiter_to_memory"),
-                                b_memory_to_arbiter("b_memory_to_arbiter"),
+                                b_shader_to_trv_ctrl("b_shader_to_trv_ctrl"),
+                                b_trv_ctrl_to_shader("b_trv_ctrl_to_shader"),
                                 f_trv_ctrl_to_bbox_ctrl("f_trv_ctrl_to_bbox_ctrl"),
                                 f_bbox_ctrl_to_lp("f_bbox_ctrl_to_lp"),
                                 f_lp_to_trv_ctrl("f_lp_to_trv_ctrl"),
