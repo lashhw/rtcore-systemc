@@ -9,16 +9,15 @@ SC_MODULE(shader) {
     blocking_in<to_shader_t> p_result;
 
     SC_HAS_PROCESS(shader);
-    shader(sc_module_name mn, const char *ray_queries_path) : sc_module(mn),
-                                                              ray_queries_path(ray_queries_path) {
+    shader(sc_module_name mn, const char *ray_queries_path) : sc_module(mn) {
+        ray_queries_file.open(ray_queries_path, std::ios::in | std::ios::binary);
+        sc_assert(ray_queries_file.good());
+
         SC_THREAD(thread_1);
         SC_THREAD(thread_2);
     }
 
     void thread_1() {
-        std::ifstream ray_queries_file(ray_queries_path, std::ios::in | std::ios::binary);
-        sc_assert(ray_queries_file.good());
-
         float r[7];
         while (ray_queries_file.read(reinterpret_cast<char*>(&r), 7*sizeof(float))) {
             ray_t ray{r[0], r[1], r[2], r[3], r[4], r[5], 0.0f, r[6]};
@@ -36,7 +35,7 @@ SC_MODULE(shader) {
         }
     }
 
-    std::string ray_queries_path;
+    std::ifstream ray_queries_file;
     ray_t processing_ray[num_working_rays];
 };
 
