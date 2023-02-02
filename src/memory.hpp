@@ -4,6 +4,7 @@
 #include <bvh/triangle.hpp>
 #include <bvh/sweep_sah_builder.hpp>
 #include "third_party/happly/happly.h"
+#include "misc.hpp"
 #include "payload_t.hpp"
 #include "blocking.hpp"
 
@@ -38,6 +39,7 @@ SC_MODULE(memory) {
     void thread_1() {
         while (true) {
             to_memory_t req = p_req->read();
+            wait(memory_latency*cycle);
             from_memory_t resp;
             switch (req.type) {
                 case to_memory_t::BBOX:
@@ -59,6 +61,7 @@ SC_MODULE(memory) {
                     }
                     break;
             }
+            p_resp->write(resp);
         }
     }
 
