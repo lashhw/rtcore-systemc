@@ -42,20 +42,36 @@ SC_MODULE(trv_ctrl) {
         m_arbiter.master_to(b_to_thread_3);
         for (int i = 0; i < num_working_rays; i++)
             f_free_fifo.direct_write(i);
+
+        SC_THREAD(thread_1);
+        SC_THREAD(thread_2);
+        SC_THREAD(thread_3);
     }
 
-    /*
-    void a_thread() {
+    void thread_1() {
         while (true) {
-            ray_t ray = p_shader_req->read();
-            int id = free_fifo.read();
+            ray_t ray = p_ray->read();
+            int id = f_free_fifo.read();
+            wait(cycle);
             ray_and_id_t ray_and_id{ray, id};
             to_trv_ctrl_t to_trv_ctrl;
             to_trv_ctrl.type = to_trv_ctrl_t::SHADER;
             to_trv_ctrl.ray_and_id = ray_and_id;
-            shader_fifo.write(to_trv_ctrl);
-            p_shader_resp->write(id);
+            f_shader_fifo.write(to_trv_ctrl);
+            p_id->write(id);
+            wait(cycle);
         }
+    }
+
+    void thread_2() {
+
+    }
+
+    void thread_3() {
+
+    }
+    /*
+    void a_thread() {
     }
 
     void b_thread() {
