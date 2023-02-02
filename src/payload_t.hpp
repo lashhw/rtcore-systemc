@@ -2,14 +2,16 @@
 #define RTCORE_SYSTEMC_PAYLOAD_T_HPP
 
 struct ray_t {
-    float origin_x;
-    float origin_y;
-    float origin_z;
-    float dir_x;
-    float dir_y;
-    float dir_z;
+    float origin[3];
+    float dir[3];
     float t_min;
     float t_max;
+};
+
+struct trig_t {
+    float p0[3];
+    float e1[3];
+    float e2[3];
 };
 
 struct ray_and_id_t {
@@ -67,9 +69,8 @@ struct from_memory_t {
         float bbox[6];
         int node[2];
         int trig_idx;
-        bvh::Triangle<float> trig;
+        trig_t trig;
     };
 };
-
 
 #endif //RTCORE_SYSTEMC_PAYLOAD_T_HPP

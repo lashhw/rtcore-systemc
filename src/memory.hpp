@@ -52,7 +52,11 @@ SC_MODULE(memory) {
                     resp.trig_idx = bvh.primitive_indices[req.idx];
                     break;
                 case to_memory_t::TRIG:
-                    resp.trig = triangles[req.idx];
+                    for (int i = 0; i < 3; i++) {
+                        resp.trig.p0[i] = triangles[req.idx].p0[i];
+                        resp.trig.e1[i] = triangles[req.idx].e1[i];
+                        resp.trig.e2[i] = triangles[req.idx].e2[i];
+                    }
                     break;
             }
         }
