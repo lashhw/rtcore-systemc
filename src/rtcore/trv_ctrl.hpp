@@ -33,11 +33,11 @@ SC_MODULE(trv_ctrl) {
                                   b_thread_3_to_thread_2("b_thread_3_to_thread_2"),
                                   f_shader_fifo("f_shader_fifo"),
                                   f_free_fifo("f_free_fifo") {
-        m_arbiter.p_from_slave[0](f_shader_fifo);
-        m_arbiter.p_from_slave[1](p_lp);
-        m_arbiter.p_from_slave[2](p_hp);
-        m_arbiter.p_from_slave[3](p_ist_ctrl_resp);
-        m_arbiter.p_to_master(b_to_thread_3);
+        m_arbiter.p_slave_req[0](f_shader_fifo);
+        m_arbiter.p_slave_req[1](p_lp);
+        m_arbiter.p_slave_req[2](p_hp);
+        m_arbiter.p_slave_req[3](p_ist_ctrl_resp);
+        m_arbiter.p_master_req(b_to_thread_3);
         for (int i = 0; i < num_working_rays; i++)
             f_free_fifo.direct_write(i);
 

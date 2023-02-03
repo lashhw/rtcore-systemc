@@ -73,14 +73,14 @@ int sc_main(int, char **) {
     master_2.resp(arbiter_to_master_2);
     master_3.req(master_3_to_arbiter);
     master_3.resp(arbiter_to_master_3);
-    arbiter_i.p_from_slave[0](master_1_to_arbiter);
-    arbiter_i.p_from_slave[1](master_2_to_arbiter);
-    arbiter_i.p_from_slave[2](master_3_to_arbiter);
-    arbiter_i.p_to_slave[0](arbiter_to_master_1);
-    arbiter_i.p_to_slave[1](arbiter_to_master_2);
-    arbiter_i.p_to_slave[2](arbiter_to_master_3);
-    arbiter_i.p_to_master(arbiter_to_slave);
-    arbiter_i.p_from_master(slave_to_arbiter);
+    arbiter_i.p_slave_req[0](master_1_to_arbiter);
+    arbiter_i.p_slave_req[1](master_2_to_arbiter);
+    arbiter_i.p_slave_req[2](master_3_to_arbiter);
+    arbiter_i.p_slave_resp[0](arbiter_to_master_1);
+    arbiter_i.p_slave_resp[1](arbiter_to_master_2);
+    arbiter_i.p_slave_resp[2](arbiter_to_master_3);
+    arbiter_i.p_master_req(arbiter_to_slave);
+    arbiter_i.p_master_resp(slave_to_arbiter);
     slave_i.req(arbiter_to_slave);
     slave_i.resp(slave_to_arbiter);
 
