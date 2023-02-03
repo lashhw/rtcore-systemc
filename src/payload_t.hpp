@@ -28,7 +28,7 @@ struct bbox_ctrl_req_t {
     int left_node_idx;
 };
 
-struct bbox_resp_t {
+struct bbox_result_t {
     ray_and_id_t ray_and_id;
     int left_node_idx;
     bool left_hit;
@@ -36,7 +36,7 @@ struct bbox_resp_t {
     bool left_first;
 };
 
-struct ist_resp_t {
+struct ist_result_t {
     ray_and_id_t ray_and_id;
     bool intersected;
     float u;
@@ -47,8 +47,8 @@ struct trv_ctrl_req_t {
     enum { SHADER, BBOX, IST } type;
     union {
         ray_and_id_t ray_and_id;
-        bbox_resp_t bbox_result;
-        ist_resp_t ist_result;
+        bbox_result_t bbox_result;
+        ist_result_t ist_result;
     };
 };
 

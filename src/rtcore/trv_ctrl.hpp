@@ -99,7 +99,7 @@ SC_MODULE(trv_ctrl) {
                     break;
                 }
                 case trv_ctrl_req_t::BBOX: {
-                    bbox_resp_t &bbox_result = req.bbox_result;
+                    bbox_result_t &bbox_result = req.bbox_result;
                     int left_node_idx = bbox_result.left_node_idx;
                     int right_node_idx = left_node_idx + 1;
                     if (bbox_result.left_hit) {

@@ -19,10 +19,10 @@ SC_MODULE(hp) {
             p_bbox_ctrl->read(req);
             wait(hp_latency*cycle);
 
-            trv_ctrl_req_t resp[num_hp];
+            trv_ctrl_req_t trv_ctrl_req[num_hp];
             for (int i = 0; i < num_hp; i++) {
-                resp[i].type = trv_ctrl_req_t::BBOX;
-                bbox_resp_t &bbox_result = resp[i].bbox_result;
+                trv_ctrl_req[i].type = trv_ctrl_req_t::BBOX;
+                bbox_result_t &bbox_result = trv_ctrl_req[i].bbox_result;
                 bbox_result.ray_and_id = req[i].ray_and_id;
                 bbox_result.left_node_idx = req[i].left_node_idx;
                 bvh::Ray<float> ray(
@@ -43,7 +43,7 @@ SC_MODULE(hp) {
                 bbox_result.right_hit = t_right.first <= t_right.second;
                 bbox_result.left_first = t_left.first <= t_right.first;
             }
-            p_trv_ctrl->write(resp);
+            p_trv_ctrl->write(trv_ctrl_req);
             wait(cycle);
         }
     }
