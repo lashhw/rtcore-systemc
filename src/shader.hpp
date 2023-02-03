@@ -23,8 +23,8 @@ SC_MODULE(shader) {
             ray_t ray{r[0], r[1], r[2], r[3], r[4], r[5], 0.0f, r[6]};
             p_ray->write(ray);
             int id = p_id->read();
-            processing_ray[id] = ray;
             std::cout << name() << "@" << sc_time_stamp() << ": ray sent, id=" << id << std::endl;
+            wait(cycle);
         }
     }
 
@@ -32,11 +32,11 @@ SC_MODULE(shader) {
         while (true) {
             result_t result = p_result->read();
             std::cout << name() << "@" << sc_time_stamp() << ": result received, id=" << result.id << std::endl;
+            wait(cycle);
         }
     }
 
     std::ifstream ray_queries_file;
-    ray_t processing_ray[num_working_rays];
 };
 
 #endif //RTCORE_SYSTEMC_SHADER_HPP
