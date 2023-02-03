@@ -1,5 +1,5 @@
-#ifndef RTCORE_SYSTEMC_MEMORY_HPP
-#define RTCORE_SYSTEMC_MEMORY_HPP
+#ifndef RTCORE_SYSTEMC_MEM_HPP
+#define RTCORE_SYSTEMC_MEM_HPP
 
 #include <bvh/triangle.hpp>
 #include <bvh/sweep_sah_builder.hpp>
@@ -8,12 +8,12 @@
 #include "payload_t.hpp"
 #include "blocking.hpp"
 
-SC_MODULE(memory) {
-    blocking_in<to_memory_t> p_req;
-    blocking_out<from_memory_t> p_resp;
+SC_MODULE(mem) {
+    blocking_in<to_mem_t> p_req;
+    blocking_out<from_mem_t> p_resp;
 
-    SC_HAS_PROCESS(memory);
-    memory(sc_module_name mn, const char *model_ply_path) : sc_module(mn) {
+    SC_HAS_PROCESS(mem);
+    mem(sc_module_name mn, const char *model_ply_path) : sc_module(mn) {
         happly::PLYData ply_data(model_ply_path);
         std::vector<std::array<double, 3>> v_pos = ply_data.getVertexPositions();
         std::vector<std::vector<size_t>> f_idx = ply_data.getFaceIndices<size_t>();
@@ -38,22 +38,22 @@ SC_MODULE(memory) {
 
     void thread_1() {
         while (true) {
-            to_memory_t req = p_req->read();
-            wait(memory_latency*cycle);
-            from_memory_t resp;
+            to_mem_t req = p_req->read();
+            wait(mem_latency*cycle);
+            from_mem_t resp;
             switch (req.type) {
-                case to_memory_t::BBOX:
+                case to_mem_t::BBOX:
                     for (int i = 0; i < 6; i++)
                         resp.bbox[i] = bvh.nodes[req.idx].bounds[i];
                     break;
-                case to_memory_t::NODE:
+                case to_mem_t::NODE:
                     resp.node[0] = bvh.nodes[req.idx].primitive_count;
                     resp.node[1] = bvh.nodes[req.idx].first_child_or_primitive;
                     break;
-                case to_memory_t::TRIG_IDX:
+                case to_mem_t::TRIG_IDX:
                     resp.trig_idx = bvh.primitive_indices[req.idx];
                     break;
-                case to_memory_t::TRIG:
+                case to_mem_t::TRIG:
                     for (int i = 0; i < 3; i++) {
                         resp.trig.p0[i] = triangles[req.idx].p0[i];
                         resp.trig.e1[i] = triangles[req.idx].e1[i];
@@ -69,4 +69,4 @@ SC_MODULE(memory) {
     bvh::Bvh<float> bvh;
 };
 
-#endif //RTCORE_SYSTEMC_MEMORY_HPP
+#endif //RTCORE_SYSTEMC_MEM_HPP

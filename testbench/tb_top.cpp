@@ -1,13 +1,13 @@
 #include <systemc>
 using namespace sc_core;
 
-#include "../src/memory.hpp"
+#include "../src/mem.hpp"
 #include "../src/shader.hpp"
 #include "../src/rtcore/rtcore.hpp"
 
 int sc_main(int, char **) {
     // module instantiation
-    memory m_memory("m_memory", "kitchen.ply");
+    mem m_memory("m_memory", "kitchen.ply");
     shader m_shader("m_shader", "ray_queries.bin");
     rtcore m_rtcore("m_rtcore");
 

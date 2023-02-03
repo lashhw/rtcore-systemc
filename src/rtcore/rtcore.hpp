@@ -9,27 +9,27 @@
 #include "ist_ctrl.hpp"
 
 SC_MODULE(rtcore) {
-    sc_export<blocking<to_memory_t>> p_mem_req;
-    sc_export<blocking<from_memory_t>> p_mem_resp;
+    sc_export<blocking<to_mem_t>> p_mem_req;
+    sc_export<blocking<from_mem_t>> p_mem_resp;
     sc_export<blocking<ray_t>> p_ray;
     sc_export<blocking<int>> p_id;
     sc_export<sync_fifo<result_t, fifo_size>> p_result;
 
-    arbiter<to_memory_t, from_memory_t, 3> m_arbiter;
+    arbiter<to_mem_t, from_mem_t, 3> m_arbiter;
     trv_ctrl m_trv_ctrl;
     bbox_ctrl m_bbox_ctrl;
     lp m_lp;
     hp m_hp;
     ist_ctrl m_ist_ctrl;
 
-    blocking<to_memory_t> b_arbiter_to_memory;
-    blocking<from_memory_t> b_memory_to_arbiter;
-    blocking<to_memory_t> b_trv_ctrl_to_arbiter;
-    blocking<from_memory_t> b_arbiter_to_trv_ctrl;
-    blocking<to_memory_t> b_bbox_ctrl_to_arbiter;
-    blocking<from_memory_t> b_arbiter_to_bbox_ctrl;
-    blocking<to_memory_t> b_ist_ctrl_to_arbiter;
-    blocking<from_memory_t> b_arbiter_to_ist_ctrl;
+    blocking<to_mem_t> b_arbiter_to_mem;
+    blocking<from_mem_t> b_mem_to_arbiter;
+    blocking<to_mem_t> b_trv_ctrl_to_arbiter;
+    blocking<from_mem_t> b_arbiter_to_trv_ctrl;
+    blocking<to_mem_t> b_bbox_ctrl_to_arbiter;
+    blocking<from_mem_t> b_arbiter_to_bbox_ctrl;
+    blocking<to_mem_t> b_ist_ctrl_to_arbiter;
+    blocking<from_mem_t> b_arbiter_to_ist_ctrl;
     blocking<ray_t> b_shader_to_trv_ctrl;
     blocking<int> b_trv_ctrl_to_shader;
 
@@ -49,8 +49,8 @@ SC_MODULE(rtcore) {
                                 m_lp("m_lp"),
                                 m_hp("m_hp"),
                                 m_ist_ctrl("m_ist_ctrl"),
-                                b_arbiter_to_memory("b_arbiter_to_memory"),
-                                b_memory_to_arbiter("b_memory_to_arbiter"),
+                                b_arbiter_to_mem("b_arbiter_to_mem"),
+                                b_mem_to_arbiter("b_mem_to_arbiter"),
                                 b_trv_ctrl_to_arbiter("b_trv_ctrl_to_arbiter"),
                                 b_arbiter_to_trv_ctrl("b_arbiter_to_trv_ctrl"),
                                 b_bbox_ctrl_to_arbiter("b_bbox_ctrl_to_arbiter"),
@@ -68,15 +68,15 @@ SC_MODULE(rtcore) {
                                 f_trv_ctrl_to_ist_ctrl("f_trv_ctrl_to_ist_ctrl"),
                                 f_ist_ctrl_to_trv_ctrl("f_ist_ctrl_to_trv_ctrl") {
         // link export
-        p_mem_req(b_arbiter_to_memory);
-        p_mem_resp(b_memory_to_arbiter);
+        p_mem_req(b_arbiter_to_mem);
+        p_mem_resp(b_mem_to_arbiter);
         p_ray(b_shader_to_trv_ctrl);
         p_id(b_trv_ctrl_to_shader);
         p_result(f_trv_ctrl_to_shader);
 
         // link arbiter
-        m_arbiter.master_to(b_arbiter_to_memory);
-        m_arbiter.master_from(b_memory_to_arbiter);
+        m_arbiter.master_to(b_arbiter_to_mem);
+        m_arbiter.master_from(b_mem_to_arbiter);
         m_arbiter.slave_from[0](b_trv_ctrl_to_arbiter);
         m_arbiter.slave_to[0](b_arbiter_to_trv_ctrl);
         m_arbiter.slave_from[1](b_bbox_ctrl_to_arbiter);
@@ -85,8 +85,8 @@ SC_MODULE(rtcore) {
         m_arbiter.slave_to[2](b_arbiter_to_ist_ctrl);
 
         // link trv_ctrl
-        m_trv_ctrl.p_memory_req(b_trv_ctrl_to_arbiter);
-        m_trv_ctrl.p_memory_resp(b_arbiter_to_trv_ctrl);
+        m_trv_ctrl.p_mem_req(b_trv_ctrl_to_arbiter);
+        m_trv_ctrl.p_mem_resp(b_arbiter_to_trv_ctrl);
         m_trv_ctrl.p_ray(b_shader_to_trv_ctrl);
         m_trv_ctrl.p_id(b_trv_ctrl_to_shader);
         m_trv_ctrl.p_result(f_trv_ctrl_to_shader);
@@ -97,8 +97,8 @@ SC_MODULE(rtcore) {
         m_trv_ctrl.p_ist_ctrl_resp(f_ist_ctrl_to_trv_ctrl);
 
         // link bbox_ctrl
-        m_bbox_ctrl.p_memory_req(b_bbox_ctrl_to_arbiter);
-        m_bbox_ctrl.p_memory_resp(b_arbiter_to_bbox_ctrl);
+        m_bbox_ctrl.p_mem_req(b_bbox_ctrl_to_arbiter);
+        m_bbox_ctrl.p_mem_resp(b_arbiter_to_bbox_ctrl);
         m_bbox_ctrl.p_trv_ctrl(f_trv_ctrl_to_bbox_ctrl);
         m_bbox_ctrl.p_lp(f_bbox_ctrl_to_lp);
         m_bbox_ctrl.p_hp(f_bbox_ctrl_to_hp);

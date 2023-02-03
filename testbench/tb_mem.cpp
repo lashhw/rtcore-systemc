@@ -1,7 +1,7 @@
 #include <systemc>
 using namespace sc_core;
 
-#include "../src/memory.hpp"
+#include "../src/mem.hpp"
 
 SC_MODULE(test) {
     sc_port<memory_if> memory_port;
@@ -10,8 +10,8 @@ SC_MODULE(test) {
     }
     void thread() {
         while (true) {
-            to_memory_t payload{};
-            payload.type = to_memory_t::BBOX;
+            to_mem_t payload{};
+            payload.type = to_mem_t::BBOX;
             payload.idx = 0;
             memory_port->request(payload);
             for (int i = 0; i < 6; i++)
@@ -24,7 +24,7 @@ SC_MODULE(test) {
 
 int sc_main(int, char**) {
     test test_i("test");
-    memory memory_i("memory", "kitchen.ply");
+    mem memory_i("memory", "kitchen.ply");
     test_i.memory_port(memory_i);
     sc_start(100, SC_NS);
     return 0;
