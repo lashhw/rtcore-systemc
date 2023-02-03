@@ -11,9 +11,9 @@
 SC_MODULE(rtcore) {
     sc_export<blocking<mem_req_t>> p_mem_req;
     sc_export<blocking<mem_resp_t>> p_mem_resp;
-    sc_export<blocking<ray_t>> p_ray;
-    sc_export<blocking<int>> p_id;
-    sc_export<sync_fifo<result_t, fifo_size>> p_result;
+    sc_export<blocking<ray_t>> p_shader_ray;
+    sc_export<blocking<int>> p_shader_id;
+    sc_export<sync_fifo<result_t, fifo_size>> p_shader_result;
 
     arbiter<mem_req_t, mem_resp_t, 3> m_arbiter;
     trv_ctrl m_trv_ctrl;
@@ -70,9 +70,9 @@ SC_MODULE(rtcore) {
         // link export
         p_mem_req(b_arbiter_to_mem);
         p_mem_resp(b_mem_to_arbiter);
-        p_ray(b_shader_to_trv_ctrl);
-        p_id(b_trv_ctrl_to_shader);
-        p_result(f_trv_ctrl_to_shader);
+        p_shader_ray(b_shader_to_trv_ctrl);
+        p_shader_id(b_trv_ctrl_to_shader);
+        p_shader_result(f_trv_ctrl_to_shader);
 
         // link arbiter
         m_arbiter.p_to_master(b_arbiter_to_mem);

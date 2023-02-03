@@ -10,8 +10,8 @@
 #include "utility.hpp"
 
 SC_MODULE(mem) {
-    blocking_in<mem_req_t> p_req;
-    blocking_out<mem_resp_t> p_resp;
+    blocking_in<mem_req_t> p_rtcore_req;
+    blocking_out<mem_resp_t> p_rtcore_resp;
 
     SC_HAS_PROCESS(mem);
     mem(sc_module_name mn, const char *model_ply_path) : sc_module(mn) {
@@ -47,7 +47,7 @@ SC_MODULE(mem) {
 
     void thread_1() {
         while (true) {
-            mem_req_t req = p_req->read();
+            mem_req_t req = p_rtcore_req->read();
             wait(mem_latency*cycle);
 
             mem_resp_t resp;
@@ -71,7 +71,7 @@ SC_MODULE(mem) {
                     }
                     break;
             }
-            p_resp->write(resp);
+            p_rtcore_resp->write(resp);
             wait(cycle);
         }
     }
