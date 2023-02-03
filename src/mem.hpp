@@ -40,6 +40,7 @@ SC_MODULE(mem) {
         while (true) {
             to_mem_t req = p_req->read();
             wait(mem_latency*cycle);
+
             from_mem_t resp;
             switch (req.type) {
                 case to_mem_t::BBOX:
@@ -62,6 +63,7 @@ SC_MODULE(mem) {
                     break;
             }
             p_resp->write(resp);
+            wait(cycle);
         }
     }
 
