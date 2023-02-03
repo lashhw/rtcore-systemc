@@ -65,17 +65,17 @@ struct to_ist_ctrl_t {
     int first_trig_idx;
 };
 
-struct to_mem_t {
+struct mem_req_t {
     enum { BBOX, NODE, TRIG_IDX, TRIG } type;
     int idx;
 };
 
 struct to_thread_2_t {
     ray_and_id_t ray_and_id;
-    to_mem_t to_mem;
+    mem_req_t mem_req;
 };
 
-struct from_mem_t {
+struct mem_resp_t {
     union {
         float bbox[6];
         int node[2];

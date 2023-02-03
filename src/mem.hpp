@@ -10,8 +10,8 @@
 #include "utility.hpp"
 
 SC_MODULE(mem) {
-    blocking_in<to_mem_t> p_req;
-    blocking_out<from_mem_t> p_resp;
+    blocking_in<mem_req_t> p_req;
+    blocking_out<mem_resp_t> p_resp;
 
     SC_HAS_PROCESS(mem);
     mem(sc_module_name mn, const char *model_ply_path) : sc_module(mn) {
@@ -47,23 +47,23 @@ SC_MODULE(mem) {
 
     void thread_1() {
         while (true) {
-            to_mem_t req = p_req->read();
+            mem_req_t req = p_req->read();
             wait(mem_latency*cycle);
 
-            from_mem_t resp;
+            mem_resp_t resp;
             switch (req.type) {
-                case to_mem_t::BBOX:
+                case mem_req_t::BBOX:
                     for (int i = 0; i < 6; i++)
                         resp.bbox[i] = bvh.nodes[req.idx].bounds[i];
                     break;
-                case to_mem_t::NODE:
+                case mem_req_t::NODE:
                     resp.node[0] = bvh.nodes[req.idx].primitive_count;
                     resp.node[1] = bvh.nodes[req.idx].first_child_or_primitive;
                     break;
-                case to_mem_t::TRIG_IDX:
+                case mem_req_t::TRIG_IDX:
                     resp.trig_idx = bvh.primitive_indices[req.idx];
                     break;
-                case to_mem_t::TRIG:
+                case mem_req_t::TRIG:
                     for (int i = 0; i < 3; i++) {
                         resp.trig.p0[i] = trigs[req.idx].p0[i];
                         resp.trig.p1[i] = trigs[req.idx].p1[i];

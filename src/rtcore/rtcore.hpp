@@ -9,27 +9,27 @@
 #include "ist_ctrl.hpp"
 
 SC_MODULE(rtcore) {
-    sc_export<blocking<to_mem_t>> p_mem_req;
-    sc_export<blocking<from_mem_t>> p_mem_resp;
+    sc_export<blocking<mem_req_t>> p_mem_req;
+    sc_export<blocking<mem_resp_t>> p_mem_resp;
     sc_export<blocking<ray_t>> p_ray;
     sc_export<blocking<int>> p_id;
     sc_export<sync_fifo<result_t, fifo_size>> p_result;
 
-    arbiter<to_mem_t, from_mem_t, 3> m_arbiter;
+    arbiter<mem_req_t, mem_resp_t, 3> m_arbiter;
     trv_ctrl m_trv_ctrl;
     bbox_ctrl m_bbox_ctrl;
     lp m_lp;
     hp m_hp;
     ist_ctrl m_ist_ctrl;
 
-    blocking<to_mem_t> b_arbiter_to_mem;
-    blocking<from_mem_t> b_mem_to_arbiter;
-    blocking<to_mem_t> b_trv_ctrl_to_arbiter;
-    blocking<from_mem_t> b_arbiter_to_trv_ctrl;
-    blocking<to_mem_t> b_bbox_ctrl_to_arbiter;
-    blocking<from_mem_t> b_arbiter_to_bbox_ctrl;
-    blocking<to_mem_t> b_ist_ctrl_to_arbiter;
-    blocking<from_mem_t> b_arbiter_to_ist_ctrl;
+    blocking<mem_req_t> b_arbiter_to_mem;
+    blocking<mem_resp_t> b_mem_to_arbiter;
+    blocking<mem_req_t> b_trv_ctrl_to_arbiter;
+    blocking<mem_resp_t> b_arbiter_to_trv_ctrl;
+    blocking<mem_req_t> b_bbox_ctrl_to_arbiter;
+    blocking<mem_resp_t> b_arbiter_to_bbox_ctrl;
+    blocking<mem_req_t> b_ist_ctrl_to_arbiter;
+    blocking<mem_resp_t> b_arbiter_to_ist_ctrl;
     blocking<ray_t> b_shader_to_trv_ctrl;
     blocking<int> b_trv_ctrl_to_shader;
 
