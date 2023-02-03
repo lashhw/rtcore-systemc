@@ -28,10 +28,11 @@ struct to_bbox_ctrl_t {
     int node_idx;
 };
 
-struct from_bbox_t {
+struct bbox_result_t {
     ray_and_id_t ray_and_id;
     int left_node_idx;
-    bool hit[2];
+    bool left_hit;
+    bool right_hit;
     bool left_first;
 };
 
@@ -39,12 +40,13 @@ struct to_trv_ctrl_t {
     enum { SHADER, BBOX, IST } type;
     union {
         ray_and_id_t ray_and_id;
-        from_bbox_t from_bbox;
+        bbox_result_t bbox_result;
     };
 };
 
 struct to_bbox_t {
     ray_and_id_t ray_and_id;
+    int left_node_idx;
     float left_bbox[6];
     float right_bbox[6];
 };

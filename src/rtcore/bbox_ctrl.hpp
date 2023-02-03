@@ -24,6 +24,7 @@ SC_MODULE(bbox_ctrl) {
             from_mem_t mem_resp = p_mem_resp->read();
             to_bbox_t to_bbox;
             to_bbox.ray_and_id = bbox_req.ray_and_id;
+            to_bbox.left_node_idx = bbox_req.node_idx;
             for (int i = 0; i < 6; i++)
                 to_bbox.left_bbox[i] = mem_resp.bbox[i];
             wait(cycle);
