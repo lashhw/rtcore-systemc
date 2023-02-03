@@ -23,6 +23,7 @@ struct arbiter : public sc_module {
         int first = 0;
 
         while (true) {
+            wait(cycle);
             bool has_data_written = false;
             for (int i = 0; i < num_slaves; i++) {
                 if (p_slave_req[i]->data_written()) {
@@ -37,15 +38,13 @@ struct arbiter : public sc_module {
             int chosen = first;
             for (; !p_slave_req[chosen]->data_written(); chosen = (chosen + 1) % num_slaves);
             wait(half_cycle);
-
             TReq req = p_slave_req[chosen]->read();
             p_master_req->write(req);
-            wait(cycle);
 
+            wait(cycle);
             TResp resp = p_master_resp->read();
             p_slave_resp[chosen]->write(resp);
             first = (first + 1) % num_slaves;
-            wait(cycle);
         }
     }
 };
@@ -67,6 +66,7 @@ struct arbiter<TReq, void, num_slaves> : public sc_module {
         int first = 0;
 
         while (true) {
+            wait(cycle);
             bool has_data_written = false;
             for (int i = 0; i < num_slaves; i++) {
                 if (p_slave_req[i]->data_written()) {
@@ -81,11 +81,9 @@ struct arbiter<TReq, void, num_slaves> : public sc_module {
             int chosen = first;
             for (; !p_slave_req[chosen]->data_written(); chosen = (chosen + 1) % num_slaves);
             wait(half_cycle);
-
             TReq req = p_slave_req[chosen]->read();
             p_master_req->write(req);
             first = (first + 1) % num_slaves;
-            wait(cycle);
         }
     }
 };

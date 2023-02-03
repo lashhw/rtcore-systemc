@@ -47,9 +47,10 @@ SC_MODULE(mem) {
 
     void thread_1() {
         while (true) {
+            wait(cycle);
             mem_req_t req = p_rtcore_req->read();
-            wait(mem_latency*cycle);
 
+            wait(mem_latency*cycle);
             mem_resp_t resp;
             switch (req.type) {
                 case mem_req_t::BBOX:
@@ -72,7 +73,6 @@ SC_MODULE(mem) {
                     break;
             }
             p_rtcore_resp->write(resp);
-            wait(cycle);
         }
     }
 

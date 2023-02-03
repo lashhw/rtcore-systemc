@@ -48,8 +48,10 @@ SC_MODULE(trv_ctrl) {
 
     void thread_1() {
         while (true) {
+            wait(cycle);
             ray_t ray = p_shader_ray->read();
             int id = f_free_fifo.read();
+
             wait(cycle);
             ray_and_id_t ray_and_id{ray, id};
             trv_ctrl_req_t to_trv_ctrl;
@@ -57,15 +59,17 @@ SC_MODULE(trv_ctrl) {
             to_trv_ctrl.ray_and_id = ray_and_id;
             f_shader_fifo.write(to_trv_ctrl);
             p_shader_id->write(id);
-            wait(cycle);
         }
     }
 
     void thread_2() {
         while (true) {
+            wait(cycle);
             thread_2_req_t req = b_thread_3_to_thread_2.read();
+
             wait(cycle);
             p_mem_req->write(req.mem_req);
+
             wait(cycle);
             mem_resp_t resp = p_mem_resp->read();
             int num_trigs = resp.node[0];
@@ -81,12 +85,12 @@ SC_MODULE(trv_ctrl) {
                 to_ist_ctrl.first_trig_idx = resp.node[1];
                 p_ist_ctrl_req->write(to_ist_ctrl);
             }
-            wait(cycle);
         }
     }
 
     void thread_3() {
         while (true) {
+            wait(cycle);
             trv_ctrl_req_t req = b_to_thread_3.read();
             thread_2_req_t to_thread_2;
             switch(req.type) {
@@ -95,7 +99,6 @@ SC_MODULE(trv_ctrl) {
                     to_thread_2.mem_req.type = mem_req_t::NODE;
                     to_thread_2.mem_req.idx = 0;
                     b_thread_3_to_thread_2.write(to_thread_2);
-                    wait(cycle);
                     break;
                 }
                 case trv_ctrl_req_t::BBOX: {
@@ -108,21 +111,21 @@ SC_MODULE(trv_ctrl) {
                             if (bbox_result.left_first) {
                                 // hit left bbox first
                                 stk[bbox_result.ray_and_id.id].push(right_node_idx);
+
                                 wait(cycle);
                                 to_thread_2.ray_and_id = bbox_result.ray_and_id;
                                 to_thread_2.mem_req.type = mem_req_t::NODE;
                                 to_thread_2.mem_req.idx = left_node_idx;
                                 b_thread_3_to_thread_2.write(to_thread_2);
-                                wait(cycle);
                             } else {
                                 // hit right bbox first
                                 stk[bbox_result.ray_and_id.id].push(left_node_idx);
+
                                 wait(cycle);
                                 to_thread_2.ray_and_id = bbox_result.ray_and_id;
                                 to_thread_2.mem_req.type = mem_req_t::NODE;
                                 to_thread_2.mem_req.idx = right_node_idx;
                                 b_thread_3_to_thread_2.write(to_thread_2);
-                                wait(cycle);
                             }
                         } else {
                             // only hit left bbox
@@ -130,7 +133,6 @@ SC_MODULE(trv_ctrl) {
                             to_thread_2.mem_req.type = mem_req_t::NODE;
                             to_thread_2.mem_req.idx = left_node_idx;
                             b_thread_3_to_thread_2.write(to_thread_2);
-                            wait(cycle);
                         }
                     } else if (bbox_result.right_hit) {
                         // only hit right bbox
@@ -138,7 +140,6 @@ SC_MODULE(trv_ctrl) {
                         to_thread_2.mem_req.type = mem_req_t::NODE;
                         to_thread_2.mem_req.idx = right_node_idx;
                         b_thread_3_to_thread_2.write(to_thread_2);
-                        wait(cycle);
                     } else {
                         // don't hit bbox
                         if (stk[bbox_result.ray_and_id.id].empty()) {
@@ -146,12 +147,12 @@ SC_MODULE(trv_ctrl) {
                         } else {
                             int stk_top = stk[bbox_result.ray_and_id.id].top();
                             stk[bbox_result.ray_and_id.id].pop();
+
                             wait(cycle);
                             to_thread_2.ray_and_id = bbox_result.ray_and_id;
                             to_thread_2.mem_req.type = mem_req_t::NODE;
                             to_thread_2.mem_req.idx = stk_top;
                             b_thread_3_to_thread_2.write(to_thread_2);
-                            wait(cycle);
                         }
                     }
                     break;

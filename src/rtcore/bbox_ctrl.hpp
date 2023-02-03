@@ -14,31 +14,31 @@ SC_MODULE(bbox_ctrl) {
 
     void thread_1() {
         while (true) {
+            wait(cycle);
             bbox_ctrl_req_t req = p_trv_ctrl->read();
             mem_req_t mem_req;
             mem_req.type = mem_req_t::BBOX;
             mem_req.idx = req.left_node_idx;
             p_mem_req->write(mem_req);
-            wait(cycle);
 
+            wait(cycle);
             mem_resp_t mem_resp = p_mem_resp->read();
             bbox_req_t bbox_req;
             bbox_req.ray_and_id = req.ray_and_id;
             bbox_req.left_node_idx = req.left_node_idx;
             for (int i = 0; i < 6; i++)
                 bbox_req.left_bbox[i] = mem_resp.bbox[i];
-            wait(cycle);
 
+            wait(cycle);
             mem_req.type = mem_req_t::BBOX;
             mem_req.idx = req.left_node_idx + 1;
             p_mem_req->write(mem_req);
-            wait(cycle);
 
+            wait(cycle);
             mem_resp = p_mem_resp->read();
             for (int i = 0; i < 6; i++)
                 bbox_req.right_bbox[i] = mem_resp.bbox[i];
             p_hp->write(bbox_req);
-            wait(cycle);
         }
     }
 };
