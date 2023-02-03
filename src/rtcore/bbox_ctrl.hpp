@@ -4,9 +4,9 @@
 SC_MODULE(bbox_ctrl) {
     blocking_out<mem_req_t> p_mem_req;
     blocking_in<mem_resp_t> p_mem_resp;
-    blocking_in<to_bbox_ctrl_t> p_trv_ctrl;
-    blocking_out<to_bbox_t> p_lp;
-    blocking_out<to_bbox_t> p_hp;
+    blocking_in<bbox_ctrl_req_t> p_trv_ctrl;
+    blocking_out<bbox_req_t> p_lp;
+    blocking_out<bbox_req_t> p_hp;
 
     SC_CTOR(bbox_ctrl) {
         SC_THREAD(thread_1);
@@ -14,7 +14,7 @@ SC_MODULE(bbox_ctrl) {
 
     void thread_1() {
         while (true) {
-            to_bbox_ctrl_t bbox_req = p_trv_ctrl->read();
+            bbox_ctrl_req_t bbox_req = p_trv_ctrl->read();
             mem_req_t mem_req;
             mem_req.type = mem_req_t::BBOX;
             mem_req.idx = bbox_req.node_idx;
@@ -22,7 +22,7 @@ SC_MODULE(bbox_ctrl) {
             wait(cycle);
 
             mem_resp_t mem_resp = p_mem_resp->read();
-            to_bbox_t to_bbox;
+            bbox_req_t to_bbox;
             to_bbox.ray_and_id = bbox_req.ray_and_id;
             to_bbox.left_node_idx = bbox_req.node_idx;
             for (int i = 0; i < 6; i++)

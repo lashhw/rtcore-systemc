@@ -33,14 +33,14 @@ SC_MODULE(rtcore) {
     blocking<ray_t> b_shader_to_trv_ctrl;
     blocking<int> b_trv_ctrl_to_shader;
 
-    sync_fifo<to_bbox_ctrl_t, fifo_size> f_trv_ctrl_to_bbox_ctrl;
-    sync_fifo<to_bbox_t, fifo_size, num_lp, 1> f_bbox_ctrl_to_lp;
-    sync_fifo<to_trv_ctrl_t, fifo_size, 1, num_lp> f_lp_to_trv_ctrl;
-    sync_fifo<to_bbox_t, fifo_size, num_hp, 1> f_bbox_ctrl_to_hp;
-    sync_fifo<to_trv_ctrl_t, fifo_size, 1, num_hp> f_hp_to_trv_ctrl;
+    sync_fifo<bbox_ctrl_req_t, fifo_size> f_trv_ctrl_to_bbox_ctrl;
+    sync_fifo<bbox_req_t, fifo_size, num_lp, 1> f_bbox_ctrl_to_lp;
+    sync_fifo<trv_ctrl_req_t, fifo_size, 1, num_lp> f_lp_to_trv_ctrl;
+    sync_fifo<bbox_req_t, fifo_size, num_hp, 1> f_bbox_ctrl_to_hp;
+    sync_fifo<trv_ctrl_req_t, fifo_size, 1, num_hp> f_hp_to_trv_ctrl;
     sync_fifo<result_t, fifo_size> f_trv_ctrl_to_shader;
-    sync_fifo<to_ist_ctrl_t, fifo_size> f_trv_ctrl_to_ist_ctrl;
-    sync_fifo<to_trv_ctrl_t, fifo_size> f_ist_ctrl_to_trv_ctrl;
+    sync_fifo<ist_ctrl_req_t, fifo_size> f_trv_ctrl_to_ist_ctrl;
+    sync_fifo<trv_ctrl_req_t, fifo_size> f_ist_ctrl_to_trv_ctrl;
 
     rtcore(sc_module_name mn) : sc_module(mn),
                                 m_arbiter("m_arbiter"),

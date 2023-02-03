@@ -6,8 +6,8 @@
 #include "../params.hpp"
 
 SC_MODULE(hp) {
-    sync_fifo_in<to_bbox_t, num_hp> p_bbox_ctrl;
-    sync_fifo_out<to_trv_ctrl_t, num_hp> p_trv_ctrl;
+    sync_fifo_in<bbox_req_t, num_hp> p_bbox_ctrl;
+    sync_fifo_out<trv_ctrl_req_t, num_hp> p_trv_ctrl;
 
     SC_CTOR(hp) {
         SC_THREAD(thread_1);
@@ -15,14 +15,14 @@ SC_MODULE(hp) {
 
     void thread_1() {
         while (true) {
-            to_bbox_t req[num_hp];
+            bbox_req_t req[num_hp];
             p_bbox_ctrl->read(req);
             wait(hp_latency*cycle);
 
-            to_trv_ctrl_t resp[num_hp];
+            trv_ctrl_req_t resp[num_hp];
             for (int i = 0; i < num_hp; i++) {
-                resp[i].type = to_trv_ctrl_t::BBOX;
-                bbox_result_t &bbox_result = resp[i].bbox_result;
+                resp[i].type = trv_ctrl_req_t::BBOX;
+                bbox_resp_t &bbox_result = resp[i].bbox_result;
                 bbox_result.ray_and_id = req[i].ray_and_id;
                 bbox_result.left_node_idx = req[i].left_node_idx;
                 bvh::Ray<float> ray(

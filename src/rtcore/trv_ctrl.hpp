@@ -10,18 +10,18 @@ SC_MODULE(trv_ctrl) {
     blocking_in<ray_t> p_ray;
     blocking_out<int> p_id;
     blocking_out<result_t> p_result;
-    blocking_out<to_bbox_ctrl_t> p_bbox_ctrl;
-    blocking_in<to_trv_ctrl_t> p_lp;
-    blocking_in<to_trv_ctrl_t> p_hp;
-    blocking_out<to_ist_ctrl_t> p_ist_ctrl_req;
-    blocking_in<to_trv_ctrl_t> p_ist_ctrl_resp;
+    blocking_out<bbox_ctrl_req_t> p_bbox_ctrl;
+    blocking_in<trv_ctrl_req_t> p_lp;
+    blocking_in<trv_ctrl_req_t> p_hp;
+    blocking_out<ist_ctrl_req_t> p_ist_ctrl_req;
+    blocking_in<trv_ctrl_req_t> p_ist_ctrl_resp;
 
-    arbiter<to_trv_ctrl_t, void, 4> m_arbiter;
+    arbiter<trv_ctrl_req_t, void, 4> m_arbiter;
 
-    blocking<to_trv_ctrl_t> b_to_thread_3;
-    blocking<to_thread_2_t> b_thread_3_to_thread_2;
+    blocking<trv_ctrl_req_t> b_to_thread_3;
+    blocking<thread_2_req_t> b_thread_3_to_thread_2;
 
-    sync_fifo<to_trv_ctrl_t, num_working_rays> f_shader_fifo;
+    sync_fifo<trv_ctrl_req_t, num_working_rays> f_shader_fifo;
     sync_fifo<int, num_working_rays> f_free_fifo;
 
     std::stack<int> stk[num_working_rays];
@@ -52,8 +52,8 @@ SC_MODULE(trv_ctrl) {
             int id = f_free_fifo.read();
             wait(cycle);
             ray_and_id_t ray_and_id{ray, id};
-            to_trv_ctrl_t to_trv_ctrl;
-            to_trv_ctrl.type = to_trv_ctrl_t::SHADER;
+            trv_ctrl_req_t to_trv_ctrl;
+            to_trv_ctrl.type = trv_ctrl_req_t::SHADER;
             to_trv_ctrl.ray_and_id = ray_and_id;
             f_shader_fifo.write(to_trv_ctrl);
             p_id->write(id);
@@ -63,19 +63,19 @@ SC_MODULE(trv_ctrl) {
 
     void thread_2() {
         while (true) {
-            to_thread_2_t req = b_thread_3_to_thread_2.read();
+            thread_2_req_t req = b_thread_3_to_thread_2.read();
             wait(cycle);
             p_mem_req->write(req.mem_req);
             wait(cycle);
             mem_resp_t resp = p_mem_resp->read();
             int num_trigs = resp.node[0];
             if (num_trigs == 0) {
-                to_bbox_ctrl_t to_bbox_ctrl;
+                bbox_ctrl_req_t to_bbox_ctrl;
                 to_bbox_ctrl.ray_and_id = req.ray_and_id;
                 to_bbox_ctrl.node_idx = resp.node[1];
                 p_bbox_ctrl->write(to_bbox_ctrl);
             } else {
-                to_ist_ctrl_t to_ist_ctrl;
+                ist_ctrl_req_t to_ist_ctrl;
                 to_ist_ctrl.ray_and_id = req.ray_and_id;
                 to_ist_ctrl.num_trigs = num_trigs;
                 to_ist_ctrl.first_trig_idx = resp.node[1];
@@ -87,10 +87,10 @@ SC_MODULE(trv_ctrl) {
 
     void thread_3() {
         while (true) {
-            to_trv_ctrl_t req = b_to_thread_3.read();
-            to_thread_2_t to_thread_2;
+            trv_ctrl_req_t req = b_to_thread_3.read();
+            thread_2_req_t to_thread_2;
             switch(req.type) {
-                case to_trv_ctrl_t::SHADER: {
+                case trv_ctrl_req_t::SHADER: {
                     to_thread_2.ray_and_id = req.ray_and_id;
                     to_thread_2.mem_req.type = mem_req_t::NODE;
                     to_thread_2.mem_req.idx = 0;
@@ -98,8 +98,8 @@ SC_MODULE(trv_ctrl) {
                     wait(cycle);
                     break;
                 }
-                case to_trv_ctrl_t::BBOX: {
-                    bbox_result_t &bbox_result = req.bbox_result;
+                case trv_ctrl_req_t::BBOX: {
+                    bbox_resp_t &bbox_result = req.bbox_result;
                     int left_node_idx = bbox_result.left_node_idx;
                     int right_node_idx = left_node_idx + 1;
                     if (bbox_result.left_hit) {
@@ -156,7 +156,7 @@ SC_MODULE(trv_ctrl) {
                     }
                     break;
                 }
-                case to_trv_ctrl_t::IST: {
+                case trv_ctrl_req_t::IST: {
                     break;
                 }
             }

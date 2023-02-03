@@ -6,8 +6,8 @@
 SC_MODULE(ist_ctrl) {
     blocking_out<mem_req_t> p_mem_req;
     blocking_in<mem_resp_t> p_mem_resp;
-    blocking_in<to_ist_ctrl_t> p_trv_ctrl_req;
-    blocking_out<to_trv_ctrl_t> p_trv_ctrl_resp;
+    blocking_in<ist_ctrl_req_t> p_trv_ctrl_req;
+    blocking_out<trv_ctrl_req_t> p_trv_ctrl_resp;
 
     SC_CTOR(ist_ctrl) {
         SC_THREAD(thread_1);
@@ -15,11 +15,11 @@ SC_MODULE(ist_ctrl) {
 
     void thread_1() {
         while (true) {
-            to_ist_ctrl_t req = p_trv_ctrl_req->read();
+            ist_ctrl_req_t req = p_trv_ctrl_req->read();
             wait(cycle);
 
-            to_trv_ctrl_t resp;
-            resp.type = to_trv_ctrl_t::IST;
+            trv_ctrl_req_t resp;
+            resp.type = trv_ctrl_req_t::IST;
             resp.ist_result.ray_and_id = req.ray_and_id;
             for (int i = 0; i < req.num_trigs; i++) {
                 mem_req_t mem_req;

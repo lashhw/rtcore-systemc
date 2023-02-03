@@ -23,12 +23,12 @@ struct ray_and_id_t {
     int id;
 };
 
-struct to_bbox_ctrl_t {
+struct bbox_ctrl_req_t {
     ray_and_id_t ray_and_id;
     int node_idx;
 };
 
-struct bbox_result_t {
+struct bbox_resp_t {
     ray_and_id_t ray_and_id;
     int left_node_idx;
     bool left_hit;
@@ -36,30 +36,30 @@ struct bbox_result_t {
     bool left_first;
 };
 
-struct ist_result_t {
+struct ist_resp_t {
     ray_and_id_t ray_and_id;
     bool intersected;
     float u;
     float v;
 };
 
-struct to_trv_ctrl_t {
+struct trv_ctrl_req_t {
     enum { SHADER, BBOX, IST } type;
     union {
         ray_and_id_t ray_and_id;
-        bbox_result_t bbox_result;
-        ist_result_t ist_result;
+        bbox_resp_t bbox_result;
+        ist_resp_t ist_result;
     };
 };
 
-struct to_bbox_t {
+struct bbox_req_t {
     ray_and_id_t ray_and_id;
     int left_node_idx;
     float left_bbox[6];
     float right_bbox[6];
 };
 
-struct to_ist_ctrl_t {
+struct ist_ctrl_req_t {
     ray_and_id_t ray_and_id;
     int num_trigs;
     int first_trig_idx;
@@ -70,7 +70,7 @@ struct mem_req_t {
     int idx;
 };
 
-struct to_thread_2_t {
+struct thread_2_req_t {
     ray_and_id_t ray_and_id;
     mem_req_t mem_req;
 };
