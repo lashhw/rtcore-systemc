@@ -13,14 +13,15 @@ struct arbiter : public sc_module {
     blocking_out<TResp> p_to_slave[num_slaves];
 
     SC_CTOR(arbiter) {
-        for (int i = 0; i < num_slaves; i++)
-            data_written_event_list |= p_from_slave[i]->data_written_event();
-        first = 0;
-
         SC_THREAD(thread_1);
     }
 
     void thread_1() {
+        sc_event_or_list data_written_event_list;
+        for (int i = 0; i < num_slaves; i++)
+            data_written_event_list |= p_from_slave[i]->data_written_event();
+        int first = 0;
+
         while (true) {
             bool has_data_written = false;
             for (int i = 0; i < num_slaves; i++) {
@@ -47,9 +48,6 @@ struct arbiter : public sc_module {
             wait(cycle);
         }
     }
-
-    sc_event_or_list data_written_event_list;
-    int first;
 };
 
 // arbiter without response
@@ -59,14 +57,15 @@ struct arbiter<TReq, void, num_slaves> : public sc_module {
     blocking_out<TReq> p_to_master;
 
     SC_CTOR(arbiter) {
-        for (int i = 0; i < num_slaves; i++)
-            data_written_event_list |= p_from_slave[i]->data_written_event();
-        first = 0;
-
         SC_THREAD(thread_1);
     }
 
     void thread_1() {
+        sc_event_or_list data_written_event_list;
+        for (int i = 0; i < num_slaves; i++)
+            data_written_event_list |= p_from_slave[i]->data_written_event();
+        int first = 0;
+
         while (true) {
             bool has_data_written = false;
             for (int i = 0; i < num_slaves; i++) {
@@ -89,9 +88,6 @@ struct arbiter<TReq, void, num_slaves> : public sc_module {
             wait(cycle);
         }
     }
-
-    sc_event_or_list data_written_event_list;
-    int first;
 };
 
 #endif //RTCORE_SYSTEMC_ARBITER_HPP
