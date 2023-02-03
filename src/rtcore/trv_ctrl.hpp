@@ -72,7 +72,7 @@ SC_MODULE(trv_ctrl) {
             if (num_trigs == 0) {
                 bbox_ctrl_req_t to_bbox_ctrl;
                 to_bbox_ctrl.ray_and_id = req.ray_and_id;
-                to_bbox_ctrl.node_idx = resp.node[1];
+                to_bbox_ctrl.left_node_idx = resp.node[1];
                 p_bbox_ctrl->write(to_bbox_ctrl);
             } else {
                 ist_ctrl_req_t to_ist_ctrl;

@@ -25,7 +25,7 @@ struct ray_and_id_t {
 
 struct bbox_ctrl_req_t {
     ray_and_id_t ray_and_id;
-    int node_idx;
+    int left_node_idx;
 };
 
 struct bbox_resp_t {
