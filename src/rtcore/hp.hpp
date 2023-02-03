@@ -13,7 +13,7 @@ SC_MODULE(hp) {
         while (true) {
             to_bbox_t req[num_hp];
             p_bbox_ctrl->read(req);
-            std::cout << name() << sc_time_stamp() << ": request received!" << std::endl;
+            std::cout << name() << " @ " << sc_time_stamp() << ": request received!" << std::endl;
             wait(cycle);
         }
     }

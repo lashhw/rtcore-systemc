@@ -31,7 +31,7 @@ SC_MODULE(shader) {
     void thread_2() {
         while (true) {
             result_t result = p_result->read();
-            std::cout << name() << "@" << sc_time_stamp() << ": result received, id=" << result.id << std::endl;
+            std::cout << name() << " @ " << sc_time_stamp() << ": result received, id=" << result.id << std::endl;
             wait(cycle);
         }
     }
