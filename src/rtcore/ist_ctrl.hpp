@@ -46,6 +46,8 @@ SC_MODULE(ist_ctrl) {
                 }
                 wait(cycle);
             }
+
+            p_trv_ctrl_resp->write(resp);
         }
     }
 };
