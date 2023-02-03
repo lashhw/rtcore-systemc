@@ -23,19 +23,19 @@ SC_MODULE(bbox_ctrl) {
 
             from_mem_t mem_resp = p_mem_resp->read();
             to_bbox_t to_bbox;
+            to_bbox.ray_and_id = bbox_req.ray_and_id;
             for (int i = 0; i < 6; i++)
                 to_bbox.left_bbox[i] = mem_resp.bbox[i];
-            p_hp->write(to_bbox);
             wait(cycle);
 
             mem_req.type = to_mem_t::BBOX;
-            mem_req.idx = bbox_req.node_idx;
+            mem_req.idx = bbox_req.node_idx + 1;
             p_mem_req->write(mem_req);
             wait(cycle);
 
             mem_resp = p_mem_resp->read();
             for (int i = 0; i < 6; i++)
-                to_bbox.left_bbox[i] = mem_resp.bbox[i];
+                to_bbox.right_bbox[i] = mem_resp.bbox[i];
             p_hp->write(to_bbox);
             wait(cycle);
         }
