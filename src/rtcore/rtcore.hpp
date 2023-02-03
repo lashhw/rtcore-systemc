@@ -75,14 +75,14 @@ SC_MODULE(rtcore) {
         p_result(f_trv_ctrl_to_shader);
 
         // link arbiter
-        m_arbiter.master_to(b_arbiter_to_mem);
-        m_arbiter.master_from(b_mem_to_arbiter);
-        m_arbiter.slave_from[0](b_trv_ctrl_to_arbiter);
-        m_arbiter.slave_to[0](b_arbiter_to_trv_ctrl);
-        m_arbiter.slave_from[1](b_bbox_ctrl_to_arbiter);
-        m_arbiter.slave_to[1](b_arbiter_to_bbox_ctrl);
-        m_arbiter.slave_from[2](b_ist_ctrl_to_arbiter);
-        m_arbiter.slave_to[2](b_arbiter_to_ist_ctrl);
+        m_arbiter.p_to_master(b_arbiter_to_mem);
+        m_arbiter.p_from_master(b_mem_to_arbiter);
+        m_arbiter.p_from_slave[0](b_trv_ctrl_to_arbiter);
+        m_arbiter.p_to_slave[0](b_arbiter_to_trv_ctrl);
+        m_arbiter.p_from_slave[1](b_bbox_ctrl_to_arbiter);
+        m_arbiter.p_to_slave[1](b_arbiter_to_bbox_ctrl);
+        m_arbiter.p_from_slave[2](b_ist_ctrl_to_arbiter);
+        m_arbiter.p_to_slave[2](b_arbiter_to_ist_ctrl);
 
         // link trv_ctrl
         m_trv_ctrl.p_mem_req(b_trv_ctrl_to_arbiter);
