@@ -87,9 +87,9 @@ SC_MODULE(rtcore) {
         // link trv_ctrl
         m_trv_ctrl.p_mem_req(b_trv_ctrl_to_arbiter);
         m_trv_ctrl.p_mem_resp(b_arbiter_to_trv_ctrl);
-        m_trv_ctrl.p_ray(b_shader_to_trv_ctrl);
-        m_trv_ctrl.p_id(b_trv_ctrl_to_shader);
-        m_trv_ctrl.p_result(f_trv_ctrl_to_shader);
+        m_trv_ctrl.p_shader_ray(b_shader_to_trv_ctrl);
+        m_trv_ctrl.p_shader_id(b_trv_ctrl_to_shader);
+        m_trv_ctrl.p_shader_result(f_trv_ctrl_to_shader);
         m_trv_ctrl.p_bbox_ctrl(f_trv_ctrl_to_bbox_ctrl);
         m_trv_ctrl.p_lp(f_lp_to_trv_ctrl);
         m_trv_ctrl.p_hp(f_hp_to_trv_ctrl);

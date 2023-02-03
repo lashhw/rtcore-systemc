@@ -7,9 +7,9 @@
 SC_MODULE(trv_ctrl) {
     blocking_out<mem_req_t> p_mem_req;
     blocking_in<mem_resp_t> p_mem_resp;
-    blocking_in<ray_t> p_ray;
-    blocking_out<int> p_id;
-    blocking_out<result_t> p_result;
+    blocking_in<ray_t> p_shader_ray;
+    blocking_out<int> p_shader_id;
+    blocking_out<result_t> p_shader_result;
     blocking_out<bbox_ctrl_req_t> p_bbox_ctrl;
     blocking_in<trv_ctrl_req_t> p_lp;
     blocking_in<trv_ctrl_req_t> p_hp;
@@ -48,7 +48,7 @@ SC_MODULE(trv_ctrl) {
 
     void thread_1() {
         while (true) {
-            ray_t ray = p_ray->read();
+            ray_t ray = p_shader_ray->read();
             int id = f_free_fifo.read();
             wait(cycle);
             ray_and_id_t ray_and_id{ray, id};
@@ -56,7 +56,7 @@ SC_MODULE(trv_ctrl) {
             to_trv_ctrl.type = trv_ctrl_req_t::SHADER;
             to_trv_ctrl.ray_and_id = ray_and_id;
             f_shader_fifo.write(to_trv_ctrl);
-            p_id->write(id);
+            p_shader_id->write(id);
             wait(cycle);
         }
     }
