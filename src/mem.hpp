@@ -4,9 +4,10 @@
 #include <bvh/triangle.hpp>
 #include <bvh/sweep_sah_builder.hpp>
 #include "third_party/happly/happly.h"
-#include "misc.hpp"
+#include "params.hpp"
 #include "payload_t.hpp"
 #include "blocking.hpp"
+#include "utility.hpp"
 
 SC_MODULE(mem) {
     blocking_in<to_mem_t> p_req;
@@ -18,7 +19,15 @@ SC_MODULE(mem) {
         std::vector<std::array<double, 3>> v_pos = ply_data.getVertexPositions();
         std::vector<std::vector<size_t>> f_idx = ply_data.getFaceIndices<size_t>();
 
+        std::vector<bvh::Triangle<float>> triangles;
         for (auto &face : f_idx) {
+            trig_t trig;
+            for (int i = 0; i < 3; i++) {
+                trig.p0[i] = v_pos[face[0]][i];
+                trig.p1[i] = v_pos[face[1]][i];
+                trig.p2[i] = v_pos[face[2]][i];
+            }
+            trigs.push_back(trig);
             triangles.emplace_back(bvh::Vector3<float>(v_pos[face[0]][0], v_pos[face[0]][1], v_pos[face[0]][2]),
                                    bvh::Vector3<float>(v_pos[face[1]][0], v_pos[face[1]][1], v_pos[face[1]][2]),
                                    bvh::Vector3<float>(v_pos[face[2]][0], v_pos[face[2]][1], v_pos[face[2]][2]));
@@ -56,9 +65,9 @@ SC_MODULE(mem) {
                     break;
                 case to_mem_t::TRIG:
                     for (int i = 0; i < 3; i++) {
-                        resp.trig.p0[i] = triangles[req.idx].p0[i];
-                        resp.trig.e1[i] = triangles[req.idx].e1[i];
-                        resp.trig.e2[i] = triangles[req.idx].e2[i];
+                        resp.trig.p0[i] = trigs[req.idx].p0[i];
+                        resp.trig.p1[i] = trigs[req.idx].p1[i];
+                        resp.trig.p2[i] = trigs[req.idx].p2[i];
                     }
                     break;
             }
@@ -67,8 +76,8 @@ SC_MODULE(mem) {
         }
     }
 
-    std::vector<bvh::Triangle<float>> triangles;
     bvh::Bvh<float> bvh;
+    std::vector<trig_t> trigs;
 };
 
 #endif //RTCORE_SYSTEMC_MEM_HPP

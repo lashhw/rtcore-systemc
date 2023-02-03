@@ -3,7 +3,7 @@
 
 #include <bvh/node_intersectors.hpp>
 #include <bvh/bvh.hpp>
-#include "../misc.hpp"
+#include "../params.hpp"
 
 SC_MODULE(hp) {
     sync_fifo_in<to_bbox_t, num_hp> p_bbox_ctrl;

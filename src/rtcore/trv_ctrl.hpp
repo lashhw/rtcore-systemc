@@ -88,9 +88,9 @@ SC_MODULE(trv_ctrl) {
     void thread_3() {
         while (true) {
             to_trv_ctrl_t req = b_to_thread_3.read();
+            to_thread_2_t to_thread_2;
             switch(req.type) {
                 case to_trv_ctrl_t::SHADER: {
-                    to_thread_2_t to_thread_2;
                     to_thread_2.ray_and_id = req.ray_and_id;
                     to_thread_2.to_mem.type = to_mem_t::NODE;
                     to_thread_2.to_mem.idx = 0;
@@ -99,27 +99,26 @@ SC_MODULE(trv_ctrl) {
                     break;
                 }
                 case to_trv_ctrl_t::BBOX: {
-                    int left_node_idx = req.bbox_result.left_node_idx;
+                    bbox_result_t &bbox_result = req.bbox_result;
+                    int left_node_idx = bbox_result.left_node_idx;
                     int right_node_idx = left_node_idx + 1;
-                    if (req.bbox_result.left_hit) {
-                        if (req.bbox_result.right_hit) {
+                    if (bbox_result.left_hit) {
+                        if (bbox_result.right_hit) {
                             // hit two bbox
-                            if (req.bbox_result.left_first) {
+                            if (bbox_result.left_first) {
                                 // hit left bbox first
-                                stk[req.bbox_result.ray_and_id.id].push(right_node_idx);
+                                stk[bbox_result.ray_and_id.id].push(right_node_idx);
                                 wait(cycle);
-                                to_thread_2_t to_thread_2;
-                                to_thread_2.ray_and_id = req.bbox_result.ray_and_id;
+                                to_thread_2.ray_and_id = bbox_result.ray_and_id;
                                 to_thread_2.to_mem.type = to_mem_t::NODE;
                                 to_thread_2.to_mem.idx = left_node_idx;
                                 b_thread_3_to_thread_2.write(to_thread_2);
                                 wait(cycle);
                             } else {
                                 // hit right bbox first
-                                stk[req.bbox_result.ray_and_id.id].push(left_node_idx);
+                                stk[bbox_result.ray_and_id.id].push(left_node_idx);
                                 wait(cycle);
-                                to_thread_2_t to_thread_2;
-                                to_thread_2.ray_and_id = req.bbox_result.ray_and_id;
+                                to_thread_2.ray_and_id = bbox_result.ray_and_id;
                                 to_thread_2.to_mem.type = to_mem_t::NODE;
                                 to_thread_2.to_mem.idx = right_node_idx;
                                 b_thread_3_to_thread_2.write(to_thread_2);
@@ -127,31 +126,28 @@ SC_MODULE(trv_ctrl) {
                             }
                         } else {
                             // only hit left bbox
-                            to_thread_2_t to_thread_2;
-                            to_thread_2.ray_and_id = req.bbox_result.ray_and_id;
+                            to_thread_2.ray_and_id = bbox_result.ray_and_id;
                             to_thread_2.to_mem.type = to_mem_t::NODE;
                             to_thread_2.to_mem.idx = left_node_idx;
                             b_thread_3_to_thread_2.write(to_thread_2);
                             wait(cycle);
                         }
-                    } else if (req.bbox_result.right_hit) {
+                    } else if (bbox_result.right_hit) {
                         // only hit right bbox
-                        to_thread_2_t to_thread_2;
-                        to_thread_2.ray_and_id = req.bbox_result.ray_and_id;
+                        to_thread_2.ray_and_id = bbox_result.ray_and_id;
                         to_thread_2.to_mem.type = to_mem_t::NODE;
                         to_thread_2.to_mem.idx = right_node_idx;
                         b_thread_3_to_thread_2.write(to_thread_2);
                         wait(cycle);
                     } else {
                         // don't hit bbox
-                        if (stk[req.bbox_result.ray_and_id.id].empty()) {
+                        if (stk[bbox_result.ray_and_id.id].empty()) {
                             // TODO: impl this
                         } else {
-                            int stk_top = stk[req.bbox_result.ray_and_id.id].top();
-                            stk[req.bbox_result.ray_and_id.id].pop();
+                            int stk_top = stk[bbox_result.ray_and_id.id].top();
+                            stk[bbox_result.ray_and_id.id].pop();
                             wait(cycle);
-                            to_thread_2_t to_thread_2;
-                            to_thread_2.ray_and_id = req.bbox_result.ray_and_id;
+                            to_thread_2.ray_and_id = bbox_result.ray_and_id;
                             to_thread_2.to_mem.type = to_mem_t::NODE;
                             to_thread_2.to_mem.idx = stk_top;
                             b_thread_3_to_thread_2.write(to_thread_2);

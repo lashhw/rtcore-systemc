@@ -2,7 +2,7 @@
 #define RTCORE_SYSTEMC_SYNC_FIFO_HPP
 
 #include "../blocking.hpp"
-#include "../misc.hpp"
+#include "../params.hpp"
 
 // input interface for sync_fifo
 template <typename T, int num_read>

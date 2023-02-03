@@ -114,8 +114,8 @@ SC_MODULE(rtcore) {
         // link ist_ctrl
         m_ist_ctrl.p_mem_req(b_ist_ctrl_to_arbiter);
         m_ist_ctrl.p_mem_resp(b_arbiter_to_ist_ctrl);
-        m_ist_ctrl.p_trv_ctrl_in(f_trv_ctrl_to_ist_ctrl);
-        m_ist_ctrl.p_trv_ctrl_out(f_ist_ctrl_to_trv_ctrl);
+        m_ist_ctrl.p_trv_ctrl_req(f_trv_ctrl_to_ist_ctrl);
+        m_ist_ctrl.p_trv_ctrl_resp(f_ist_ctrl_to_trv_ctrl);
     }
 };
 

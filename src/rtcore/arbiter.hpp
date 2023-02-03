@@ -2,7 +2,7 @@
 #define RTCORE_SYSTEMC_ARBITER_HPP
 
 #include "../blocking.hpp"
-#include "../misc.hpp"
+#include "../params.hpp"
 
 // arbiter with response
 template<typename TReq, typename TResp, int num_slaves>

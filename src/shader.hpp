@@ -1,7 +1,7 @@
 #ifndef RTCORE_SYSTEMC_SHADER_HPP
 #define RTCORE_SYSTEMC_SHADER_HPP
 
-#include "misc.hpp"
+#include "params.hpp"
 
 SC_MODULE(shader) {
     blocking_out<ray_t> p_ray;

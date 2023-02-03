@@ -14,8 +14,8 @@ struct result_t {
 
 struct trig_t {
     float p0[3];
-    float e1[3];
-    float e2[3];
+    float p1[3];
+    float p2[3];
 };
 
 struct ray_and_id_t {
@@ -36,11 +36,19 @@ struct bbox_result_t {
     bool left_first;
 };
 
+struct ist_result_t {
+    ray_and_id_t ray_and_id;
+    bool intersected;
+    float u;
+    float v;
+};
+
 struct to_trv_ctrl_t {
     enum { SHADER, BBOX, IST } type;
     union {
         ray_and_id_t ray_and_id;
         bbox_result_t bbox_result;
+        ist_result_t ist_result;
     };
 };
 
