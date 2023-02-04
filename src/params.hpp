@@ -9,7 +9,7 @@ constexpr int num_hp = 4;
 constexpr int mem_latency = 5;
 constexpr int hp_latency = 5;
 
-const sc_time half_cycle = sc_time(0.5, SC_NS);
-const sc_time cycle = sc_time(1, SC_NS);
+const sc_time half_cycle = sc_time(1, SC_PS);
+const sc_time cycle = sc_time(2, SC_PS);
 
 #endif //RTCORE_SYSTEMC_PARAMS_HPP
