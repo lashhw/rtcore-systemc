@@ -13,8 +13,8 @@ SC_MODULE(trv_ctrl) {
     blocking_out<bbox_ctrl_req_t> p_bbox_ctrl;
     blocking_in<trv_ctrl_req_t> p_lp;
     blocking_in<trv_ctrl_req_t> p_hp;
-    blocking_out<ist_ctrl_req_t> p_ist_ctrl_req;
-    blocking_in<trv_ctrl_req_t> p_ist_ctrl_resp;
+    blocking_out<ist_ctrl_req_t> p_ist_ctrl_out;
+    blocking_in<trv_ctrl_req_t> p_ist_ctrl_in;
 
     arbiter<trv_ctrl_req_t, void, 4> m_arbiter;
 
@@ -36,7 +36,7 @@ SC_MODULE(trv_ctrl) {
         m_arbiter.p_slave_req[0](f_shader_fifo);
         m_arbiter.p_slave_req[1](p_lp);
         m_arbiter.p_slave_req[2](p_hp);
-        m_arbiter.p_slave_req[3](p_ist_ctrl_resp);
+        m_arbiter.p_slave_req[3](p_ist_ctrl_in);
         m_arbiter.p_master_req(b_to_thread_3);
         for (int i = 0; i < num_working_rays; i++)
             f_free_fifo.direct_write(i);
@@ -88,7 +88,7 @@ SC_MODULE(trv_ctrl) {
                 to_ist_ctrl.ray_and_id = req.ray_and_id;
                 to_ist_ctrl.num_trigs = num_trigs;
                 to_ist_ctrl.first_trig_idx = resp.node[1];
-                p_ist_ctrl_req->write(to_ist_ctrl);
+                p_ist_ctrl_out->write(to_ist_ctrl);
             }
         }
     }
