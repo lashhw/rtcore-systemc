@@ -10,6 +10,10 @@ struct ray_t {
 
 struct result_t {
     int id;
+    bool intersected;
+    float t;
+    float u;
+    float v;
 };
 
 struct trig_t {

@@ -61,6 +61,9 @@ SC_MODULE(trv_ctrl) {
             to_trv_ctrl.ray_and_id = ray_and_id;
             f_shader_fifo.write(to_trv_ctrl);
             p_shader_id->write(id);
+
+            wait(cycle);
+            result[id].intersected = false;
         }
     }
 
@@ -143,30 +146,48 @@ SC_MODULE(trv_ctrl) {
                         thread_2_req.mem_req.idx = right_node_idx;
                         b_thread_3_to_thread_2.write(thread_2_req);
                     } else {
-                        wait(cycle);
                         // don't hit bbox
-                        if (stk[bbox_result.ray_and_id.id].empty()) {
-                            // TODO: impl this
-                            std::cout << name() << " @ " << sc_time_stamp() << ": finished." << std::endl;
-                        } else {
-                            int stk_top = stk[bbox_result.ray_and_id.id].top();
-                            stk[bbox_result.ray_and_id.id].pop();
-                            thread_2_req.ray_and_id = bbox_result.ray_and_id;
-                            thread_2_req.mem_req.type = mem_req_t::NODE;
-                            thread_2_req.mem_req.idx = stk_top;
-                            b_thread_3_to_thread_2.write(thread_2_req);
-                        }
+                        from_stk(bbox_result.ray_and_id);
                     }
                     break;
                 }
                 case trv_ctrl_req_t::IST: {
-                    // TODO: impl this
-                    std::cout << name() << " @ " << sc_time_stamp() << ": ist request received." << std::endl;
+                    if (result[req.ist_result.ray_and_id.id].intersected) {
+                        wait(cycle);
+                        result[req.ist_result.ray_and_id.id].intersected = true;
+                        result[req.ist_result.ray_and_id.id].u = req.ist_result.u;
+                        result[req.ist_result.ray_and_id.id].v = req.ist_result.v;
+                    }
+
+                    wait(cycle);
+                    from_stk(req.ist_result.ray_and_id);
                     break;
                 }
             }
         }
     }
+
+    void from_stk(const ray_and_id_t &ray_and_id) {
+        wait(cycle);
+        if (stk[ray_and_id.id].empty()) {
+            // TODO: impl this
+            std::cout << name() << " @ " << sc_time_stamp() << ": finished." << std::endl;
+        } else {
+            int stk_top = stk[ray_and_id.id].top();
+            stk[ray_and_id.id].pop();
+            thread_2_req_t thread_2_req;
+            thread_2_req.ray_and_id = ray_and_id;
+            thread_2_req.mem_req.type = mem_req_t::NODE;
+            thread_2_req.mem_req.idx = stk_top;
+            b_thread_3_to_thread_2.write(thread_2_req);
+        }
+    }
+
+    struct {
+        bool intersected;
+        float u;
+        float v;
+    } result[num_working_rays];
 };
 
 #endif //RTCORE_SYSTEMC_TRV_CTRL_HPP
