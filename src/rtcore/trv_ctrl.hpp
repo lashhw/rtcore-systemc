@@ -49,11 +49,13 @@ SC_MODULE(trv_ctrl) {
     void thread_1() {
         while (true) {
             wait(cycle);
-            ray_t ray = p_shader_ray->read();
             int id = f_free_fifo.read();
+            ray_t ray = p_shader_ray->read();
 
             wait(cycle);
-            ray_and_id_t ray_and_id{ray, id};
+            ray_and_id_t ray_and_id;
+            ray_and_id.ray = ray;
+            ray_and_id.id = id;
             trv_ctrl_req_t to_trv_ctrl;
             to_trv_ctrl.type = trv_ctrl_req_t::SHADER;
             to_trv_ctrl.ray_and_id = ray_and_id;
@@ -92,13 +94,13 @@ SC_MODULE(trv_ctrl) {
         while (true) {
             wait(cycle);
             trv_ctrl_req_t req = b_to_thread_3.read();
-            thread_2_req_t to_thread_2;
+            thread_2_req_t thread_2_req;
             switch(req.type) {
                 case trv_ctrl_req_t::SHADER: {
-                    to_thread_2.ray_and_id = req.ray_and_id;
-                    to_thread_2.mem_req.type = mem_req_t::NODE;
-                    to_thread_2.mem_req.idx = 0;
-                    b_thread_3_to_thread_2.write(to_thread_2);
+                    thread_2_req.ray_and_id = req.ray_and_id;
+                    thread_2_req.mem_req.type = mem_req_t::NODE;
+                    thread_2_req.mem_req.idx = 0;
+                    b_thread_3_to_thread_2.write(thread_2_req);
                     break;
                 }
                 case trv_ctrl_req_t::BBOX: {
@@ -113,51 +115,53 @@ SC_MODULE(trv_ctrl) {
                                 stk[bbox_result.ray_and_id.id].push(right_node_idx);
 
                                 wait(cycle);
-                                to_thread_2.ray_and_id = bbox_result.ray_and_id;
-                                to_thread_2.mem_req.type = mem_req_t::NODE;
-                                to_thread_2.mem_req.idx = left_node_idx;
-                                b_thread_3_to_thread_2.write(to_thread_2);
+                                thread_2_req.ray_and_id = bbox_result.ray_and_id;
+                                thread_2_req.mem_req.type = mem_req_t::NODE;
+                                thread_2_req.mem_req.idx = left_node_idx;
+                                b_thread_3_to_thread_2.write(thread_2_req);
                             } else {
                                 // hit right bbox first
                                 stk[bbox_result.ray_and_id.id].push(left_node_idx);
 
                                 wait(cycle);
-                                to_thread_2.ray_and_id = bbox_result.ray_and_id;
-                                to_thread_2.mem_req.type = mem_req_t::NODE;
-                                to_thread_2.mem_req.idx = right_node_idx;
-                                b_thread_3_to_thread_2.write(to_thread_2);
+                                thread_2_req.ray_and_id = bbox_result.ray_and_id;
+                                thread_2_req.mem_req.type = mem_req_t::NODE;
+                                thread_2_req.mem_req.idx = right_node_idx;
+                                b_thread_3_to_thread_2.write(thread_2_req);
                             }
                         } else {
                             // only hit left bbox
-                            to_thread_2.ray_and_id = bbox_result.ray_and_id;
-                            to_thread_2.mem_req.type = mem_req_t::NODE;
-                            to_thread_2.mem_req.idx = left_node_idx;
-                            b_thread_3_to_thread_2.write(to_thread_2);
+                            thread_2_req.ray_and_id = bbox_result.ray_and_id;
+                            thread_2_req.mem_req.type = mem_req_t::NODE;
+                            thread_2_req.mem_req.idx = left_node_idx;
+                            b_thread_3_to_thread_2.write(thread_2_req);
                         }
                     } else if (bbox_result.right_hit) {
                         // only hit right bbox
-                        to_thread_2.ray_and_id = bbox_result.ray_and_id;
-                        to_thread_2.mem_req.type = mem_req_t::NODE;
-                        to_thread_2.mem_req.idx = right_node_idx;
-                        b_thread_3_to_thread_2.write(to_thread_2);
+                        thread_2_req.ray_and_id = bbox_result.ray_and_id;
+                        thread_2_req.mem_req.type = mem_req_t::NODE;
+                        thread_2_req.mem_req.idx = right_node_idx;
+                        b_thread_3_to_thread_2.write(thread_2_req);
                     } else {
+                        wait(cycle);
                         // don't hit bbox
                         if (stk[bbox_result.ray_and_id.id].empty()) {
                             // TODO: impl this
+                            std::cout << name() << " @ " << sc_time_stamp() << ": finished." << std::endl;
                         } else {
                             int stk_top = stk[bbox_result.ray_and_id.id].top();
                             stk[bbox_result.ray_and_id.id].pop();
-
-                            wait(cycle);
-                            to_thread_2.ray_and_id = bbox_result.ray_and_id;
-                            to_thread_2.mem_req.type = mem_req_t::NODE;
-                            to_thread_2.mem_req.idx = stk_top;
-                            b_thread_3_to_thread_2.write(to_thread_2);
+                            thread_2_req.ray_and_id = bbox_result.ray_and_id;
+                            thread_2_req.mem_req.type = mem_req_t::NODE;
+                            thread_2_req.mem_req.idx = stk_top;
+                            b_thread_3_to_thread_2.write(thread_2_req);
                         }
                     }
                     break;
                 }
                 case trv_ctrl_req_t::IST: {
+                    // TODO: impl this
+                    std::cout << name() << " @ " << sc_time_stamp() << ": ist request received." << std::endl;
                     break;
                 }
             }
