@@ -23,7 +23,7 @@ SC_MODULE(hp) {
             trv_ctrl_req_t trv_ctrl_req[num_hp];
             for (int i = 0; i < num_hp; i++) {
                 trv_ctrl_req[i].type = trv_ctrl_req_t::BBOX;
-                bbox_result_t &bbox_result = trv_ctrl_req[i].bbox_result;
+                bbox_result_t &bbox_result = trv_ctrl_req[i].bbox;
                 bbox_result.ray_and_id = req[i].ray_and_id;
                 bbox_result.left_node_idx = req[i].left_node_idx;
                 bvh::Ray<float> ray(

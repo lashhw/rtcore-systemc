@@ -19,8 +19,8 @@ SC_MODULE(ist_ctrl) {
             ist_ctrl_req_t req = p_trv_ctrl_req->read();
             trv_ctrl_req_t resp;
             resp.type = trv_ctrl_req_t::IST;
-            resp.ist_result.ray_and_id = req.ray_and_id;
-            resp.ist_result.intersected = false;
+            resp.ist.ray_and_id = req.ray_and_id;
+            resp.ist.intersected = false;
 
             for (int i = 0; i < req.num_trigs; i++) {
                 wait(cycle);
@@ -38,13 +38,13 @@ SC_MODULE(ist_ctrl) {
                 wait(cycle);
                 mem_resp = p_mem_resp->read();
                 bvh::Triangle<float> triangle = to_bvh_triangle(mem_resp.trig);
-                bvh::Ray<float> ray = to_bvh_ray(resp.ist_result.ray_and_id.ray);
+                bvh::Ray<float> ray = to_bvh_ray(resp.ist.ray_and_id.ray);
                 auto result = triangle.intersect(ray);
                 if (result) {
-                    resp.ist_result.ray_and_id.ray.t_max = result->t;
-                    resp.ist_result.intersected = true;
-                    resp.ist_result.u = result->u;
-                    resp.ist_result.v = result->v;
+                    resp.ist.ray_and_id.ray.t_max = result->t;
+                    resp.ist.intersected = true;
+                    resp.ist.u = result->u;
+                    resp.ist.v = result->v;
                 }
             }
 

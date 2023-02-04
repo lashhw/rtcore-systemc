@@ -58,7 +58,7 @@ SC_MODULE(trv_ctrl) {
             ray_and_id.id = id;
             trv_ctrl_req_t to_trv_ctrl;
             to_trv_ctrl.type = trv_ctrl_req_t::SHADER;
-            to_trv_ctrl.ray_and_id = ray_and_id;
+            to_trv_ctrl.shader = ray_and_id;
             f_shader_fifo.write(to_trv_ctrl);
             p_shader_id->write(id);
 
@@ -100,14 +100,14 @@ SC_MODULE(trv_ctrl) {
             thread_2_req_t thread_2_req;
             switch(req.type) {
                 case trv_ctrl_req_t::SHADER: {
-                    thread_2_req.ray_and_id = req.ray_and_id;
+                    thread_2_req.ray_and_id = req.shader;
                     thread_2_req.mem_req.type = mem_req_t::NODE;
                     thread_2_req.mem_req.idx = 0;
                     b_thread_3_to_thread_2.write(thread_2_req);
                     break;
                 }
                 case trv_ctrl_req_t::BBOX: {
-                    bbox_result_t &bbox_result = req.bbox_result;
+                    bbox_result_t &bbox_result = req.bbox;
                     int left_node_idx = bbox_result.left_node_idx;
                     int right_node_idx = left_node_idx + 1;
                     if (bbox_result.left_hit) {
@@ -152,16 +152,16 @@ SC_MODULE(trv_ctrl) {
                     break;
                 }
                 case trv_ctrl_req_t::IST: {
-                    if (mem_result[req.ist_result.ray_and_id.id].intersected) {
+                    if (mem_result[req.ist.ray_and_id.id].intersected) {
                         wait(cycle);
-                        mem_result[req.ist_result.ray_and_id.id].intersected = true;
-                        mem_result[req.ist_result.ray_and_id.id].u = req.ist_result.u;
-                        mem_result[req.ist_result.ray_and_id.id].v = req.ist_result.v;
+                        mem_result[req.ist.ray_and_id.id].intersected = true;
+                        mem_result[req.ist.ray_and_id.id].u = req.ist.u;
+                        mem_result[req.ist.ray_and_id.id].v = req.ist.v;
                     }
 
                     wait(cycle);
-                    from_stk(req.ist_result.ray_and_id);
-                    f_free_fifo.write(req.ist_result.ray_and_id.id);
+                    from_stk(req.ist.ray_and_id);
+                    f_free_fifo.write(req.ist.ray_and_id.id);
                     break;
                 }
             }

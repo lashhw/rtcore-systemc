@@ -50,9 +50,9 @@ struct ist_result_t {
 struct trv_ctrl_req_t {
     enum { SHADER, BBOX, IST } type;
     union {
-        ray_and_id_t ray_and_id;
-        bbox_result_t bbox_result;
-        ist_result_t ist_result;
+        ray_and_id_t shader;
+        bbox_result_t bbox;
+        ist_result_t ist;
     };
 };
 
