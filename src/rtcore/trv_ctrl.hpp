@@ -18,18 +18,23 @@ SC_MODULE(trv_ctrl) {
 
     arbiter<trv_ctrl_req_t, void, 4> m_arbiter;
 
-    blocking<trv_ctrl_req_t> b_to_thread_3;
+    blocking<trv_ctrl_req_t> b_arbiter_to_thread_3;
     blocking<thread_2_req_t> b_thread_3_to_thread_2;
 
     sync_fifo<trv_ctrl_req_t, num_working_rays> f_shader_fifo;
     sync_fifo<int, num_working_rays> f_free_fifo;
 
-    std::stack<int> stk[num_working_rays];
+    std::stack<int> h_stk[num_working_rays];
+    struct {
+        bool intersected;
+        float u;
+        float v;
+    } h_result[num_working_rays];
 
     SC_HAS_PROCESS(trv_ctrl);
     trv_ctrl(sc_module_name mn) : sc_module(mn),
                                   m_arbiter("m_arbiter"),
-                                  b_to_thread_3("b_to_thread_3"),
+                                  b_arbiter_to_thread_3("b_arbiter_to_thread_3"),
                                   b_thread_3_to_thread_2("b_thread_3_to_thread_2"),
                                   f_shader_fifo("f_shader_fifo"),
                                   f_free_fifo("f_free_fifo") {
@@ -37,7 +42,7 @@ SC_MODULE(trv_ctrl) {
         m_arbiter.p_slave_req[1](p_lp);
         m_arbiter.p_slave_req[2](p_hp);
         m_arbiter.p_slave_req[3](p_ist_ctrl_in);
-        m_arbiter.p_master_req(b_to_thread_3);
+        m_arbiter.p_master_req(b_arbiter_to_thread_3);
         for (int i = 0; i < num_working_rays; i++)
             f_free_fifo.direct_write(i);
 
@@ -53,17 +58,15 @@ SC_MODULE(trv_ctrl) {
             ray_t ray = p_shader_ray->read();
 
             wait(cycle);
-            ray_and_id_t ray_and_id;
-            ray_and_id.ray = ray;
-            ray_and_id.id = id;
-            trv_ctrl_req_t to_trv_ctrl;
-            to_trv_ctrl.type = trv_ctrl_req_t::SHADER;
-            to_trv_ctrl.shader = ray_and_id;
-            f_shader_fifo.write(to_trv_ctrl);
-            p_shader_id->write(id);
+            h_result[id].intersected = false;
 
             wait(cycle);
-            mem_result[id].intersected = false;
+            trv_ctrl_req_t trv_ctrl_req;
+            trv_ctrl_req.type = trv_ctrl_req_t::SHADER;
+            trv_ctrl_req.shader.ray = ray;
+            trv_ctrl_req.shader.id = id;
+            f_shader_fifo.write(trv_ctrl_req);
+            p_shader_id->write(id);
         }
     }
 
@@ -71,6 +74,7 @@ SC_MODULE(trv_ctrl) {
         while (true) {
             wait(cycle);
             thread_2_req_t req = b_thread_3_to_thread_2.read();
+            sc_assert(req.mem_req.type == mem_req_t::NODE);
 
             wait(cycle);
             p_mem_req->write(req.mem_req);
@@ -79,16 +83,16 @@ SC_MODULE(trv_ctrl) {
             mem_resp_t resp = p_mem_resp->read();
             int num_trigs = resp.node[0];
             if (num_trigs == 0) {
-                bbox_ctrl_req_t to_bbox_ctrl;
-                to_bbox_ctrl.ray_and_id = req.ray_and_id;
-                to_bbox_ctrl.left_node_idx = resp.node[1];
-                p_bbox_ctrl->write(to_bbox_ctrl);
+                bbox_ctrl_req_t bbox_ctrl_req;
+                bbox_ctrl_req.ray_and_id = req.ray_and_id;
+                bbox_ctrl_req.left_node_idx = resp.node[1];
+                p_bbox_ctrl->write(bbox_ctrl_req);
             } else {
-                ist_ctrl_req_t to_ist_ctrl;
-                to_ist_ctrl.ray_and_id = req.ray_and_id;
-                to_ist_ctrl.num_trigs = num_trigs;
-                to_ist_ctrl.first_trig_idx = resp.node[1];
-                p_ist_ctrl_out->write(to_ist_ctrl);
+                ist_ctrl_req_t ist_ctrl_req;
+                ist_ctrl_req.ray_and_id = req.ray_and_id;
+                ist_ctrl_req.num_trigs = num_trigs;
+                ist_ctrl_req.first_trig_idx = resp.node[1];
+                p_ist_ctrl_out->write(ist_ctrl_req);
             }
         }
     }
@@ -96,18 +100,18 @@ SC_MODULE(trv_ctrl) {
     void thread_3() {
         while (true) {
             wait(cycle);
-            trv_ctrl_req_t req = b_to_thread_3.read();
-            thread_2_req_t thread_2_req;
-            switch(req.type) {
+            trv_ctrl_req_t trv_ctrl_req = b_arbiter_to_thread_3.read();
+            switch(trv_ctrl_req.type) {
                 case trv_ctrl_req_t::SHADER: {
-                    thread_2_req.ray_and_id = req.shader;
+                    thread_2_req_t thread_2_req;
+                    thread_2_req.ray_and_id = trv_ctrl_req.shader;
                     thread_2_req.mem_req.type = mem_req_t::NODE;
                     thread_2_req.mem_req.idx = 0;
                     b_thread_3_to_thread_2.write(thread_2_req);
                     break;
                 }
                 case trv_ctrl_req_t::BBOX: {
-                    bbox_result_t &bbox_result = req.bbox;
+                    bbox_result_t &bbox_result = trv_ctrl_req.bbox;
                     int left_node_idx = bbox_result.left_node_idx;
                     int right_node_idx = left_node_idx + 1;
                     if (bbox_result.left_hit) {
@@ -115,18 +119,20 @@ SC_MODULE(trv_ctrl) {
                             // hit two bbox
                             if (bbox_result.left_first) {
                                 // hit left bbox first
-                                stk[bbox_result.ray_and_id.id].push(right_node_idx);
+                                h_stk[bbox_result.ray_and_id.id].push(right_node_idx);
 
                                 wait(cycle);
+                                thread_2_req_t thread_2_req;
                                 thread_2_req.ray_and_id = bbox_result.ray_and_id;
                                 thread_2_req.mem_req.type = mem_req_t::NODE;
                                 thread_2_req.mem_req.idx = left_node_idx;
                                 b_thread_3_to_thread_2.write(thread_2_req);
                             } else {
                                 // hit right bbox first
-                                stk[bbox_result.ray_and_id.id].push(left_node_idx);
+                                h_stk[bbox_result.ray_and_id.id].push(left_node_idx);
 
                                 wait(cycle);
+                                thread_2_req_t thread_2_req;
                                 thread_2_req.ray_and_id = bbox_result.ray_and_id;
                                 thread_2_req.mem_req.type = mem_req_t::NODE;
                                 thread_2_req.mem_req.idx = right_node_idx;
@@ -134,6 +140,7 @@ SC_MODULE(trv_ctrl) {
                             }
                         } else {
                             // only hit left bbox
+                            thread_2_req_t thread_2_req;
                             thread_2_req.ray_and_id = bbox_result.ray_and_id;
                             thread_2_req.mem_req.type = mem_req_t::NODE;
                             thread_2_req.mem_req.idx = left_node_idx;
@@ -141,47 +148,49 @@ SC_MODULE(trv_ctrl) {
                         }
                     } else if (bbox_result.right_hit) {
                         // only hit right bbox
+                        thread_2_req_t thread_2_req;
                         thread_2_req.ray_and_id = bbox_result.ray_and_id;
                         thread_2_req.mem_req.type = mem_req_t::NODE;
                         thread_2_req.mem_req.idx = right_node_idx;
                         b_thread_3_to_thread_2.write(thread_2_req);
                     } else {
                         // don't hit bbox
-                        from_stk(bbox_result.ray_and_id);
+                        stk_op(bbox_result.ray_and_id);
                     }
                     break;
                 }
                 case trv_ctrl_req_t::IST: {
-                    if (mem_result[req.ist.ray_and_id.id].intersected) {
+                    if (trv_ctrl_req.ist.intersected) {
                         wait(cycle);
-                        mem_result[req.ist.ray_and_id.id].intersected = true;
-                        mem_result[req.ist.ray_and_id.id].u = req.ist.u;
-                        mem_result[req.ist.ray_and_id.id].v = req.ist.v;
-                    }
+                        h_result[trv_ctrl_req.ist.ray_and_id.id].intersected = true;
+                        h_result[trv_ctrl_req.ist.ray_and_id.id].u = trv_ctrl_req.ist.u;
+                        h_result[trv_ctrl_req.ist.ray_and_id.id].v = trv_ctrl_req.ist.v;
 
-                    wait(cycle);
-                    from_stk(req.ist.ray_and_id);
-                    f_free_fifo.write(req.ist.ray_and_id.id);
+                        wait(cycle);
+                    }
+                    stk_op(trv_ctrl_req.ist.ray_and_id);
                     break;
                 }
             }
         }
     }
 
-    void from_stk(const ray_and_id_t &ray_and_id) {
-        wait(cycle);
-        if (stk[ray_and_id.id].empty()) {
-            wait(cycle);
+    void stk_op(const ray_and_id_t &ray_and_id) {
+        wait(cycle);  // read h_stk top & pop
+        if (h_stk[ray_and_id.id].empty()) {
+
+            wait(cycle);  // read h_result
             result_t result;
             result.id = ray_and_id.id;
-            result.intersected = mem_result[ray_and_id.id].intersected;
+            result.intersected = h_result[ray_and_id.id].intersected;
             result.t = ray_and_id.ray.t_max;
-            result.u = mem_result[ray_and_id.id].u;
-            result.v = mem_result[ray_and_id.id].v;
+            result.u = h_result[ray_and_id.id].u;
+            result.v = h_result[ray_and_id.id].v;
+            f_free_fifo.write(ray_and_id.id);
             p_shader_result->write(result);
         } else {
-            int stk_top = stk[ray_and_id.id].top();
-            stk[ray_and_id.id].pop();
+            int stk_top = h_stk[ray_and_id.id].top();
+            h_stk[ray_and_id.id].pop();
             thread_2_req_t thread_2_req;
             thread_2_req.ray_and_id = ray_and_id;
             thread_2_req.mem_req.type = mem_req_t::NODE;
@@ -189,12 +198,6 @@ SC_MODULE(trv_ctrl) {
             b_thread_3_to_thread_2.write(thread_2_req);
         }
     }
-
-    struct {
-        bool intersected;
-        float u;
-        float v;
-    } mem_result[num_working_rays];
 };
 
 #endif //RTCORE_SYSTEMC_TRV_CTRL_HPP
