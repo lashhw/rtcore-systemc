@@ -63,7 +63,7 @@ SC_MODULE(trv_ctrl) {
             p_shader_id->write(id);
 
             wait(cycle);
-            result[id].intersected = false;
+            mem_result[id].intersected = false;
         }
     }
 
@@ -152,11 +152,11 @@ SC_MODULE(trv_ctrl) {
                     break;
                 }
                 case trv_ctrl_req_t::IST: {
-                    if (result[req.ist_result.ray_and_id.id].intersected) {
+                    if (mem_result[req.ist_result.ray_and_id.id].intersected) {
                         wait(cycle);
-                        result[req.ist_result.ray_and_id.id].intersected = true;
-                        result[req.ist_result.ray_and_id.id].u = req.ist_result.u;
-                        result[req.ist_result.ray_and_id.id].v = req.ist_result.v;
+                        mem_result[req.ist_result.ray_and_id.id].intersected = true;
+                        mem_result[req.ist_result.ray_and_id.id].u = req.ist_result.u;
+                        mem_result[req.ist_result.ray_and_id.id].v = req.ist_result.v;
                     }
 
                     wait(cycle);
@@ -170,8 +170,14 @@ SC_MODULE(trv_ctrl) {
     void from_stk(const ray_and_id_t &ray_and_id) {
         wait(cycle);
         if (stk[ray_and_id.id].empty()) {
-            // TODO: impl this
-            std::cout << name() << " @ " << sc_time_stamp() << ": finished." << std::endl;
+            wait(cycle);
+            result_t result;
+            result.id = ray_and_id.id;
+            result.intersected = mem_result[ray_and_id.id].intersected;
+            result.t = ray_and_id.ray.t_max;
+            result.u = mem_result[ray_and_id.id].u;
+            result.v = mem_result[ray_and_id.id].v;
+            p_shader_result->write(result);
         } else {
             int stk_top = stk[ray_and_id.id].top();
             stk[ray_and_id.id].pop();
@@ -187,7 +193,7 @@ SC_MODULE(trv_ctrl) {
         bool intersected;
         float u;
         float v;
-    } result[num_working_rays];
+    } mem_result[num_working_rays];
 };
 
 #endif //RTCORE_SYSTEMC_TRV_CTRL_HPP
