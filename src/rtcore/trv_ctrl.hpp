@@ -161,6 +161,7 @@ SC_MODULE(trv_ctrl) {
 
                     wait(cycle);
                     from_stk(req.ist_result.ray_and_id);
+                    f_free_fifo.write(req.ist_result.ray_and_id.id);
                     break;
                 }
             }
