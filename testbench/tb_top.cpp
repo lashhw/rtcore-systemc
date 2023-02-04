@@ -8,7 +8,7 @@ using namespace sc_core;
 int sc_main(int, char **) {
     // module instantiation
     mem m_mem("m_mem", "kitchen.ply");
-    shader m_shader("m_shader", "ray_queries.bin");
+    shader m_shader("m_shader", "ray_queries.bin", m_mem);
     rtcore m_rtcore("m_rtcore");
 
     // link memory

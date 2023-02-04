@@ -9,7 +9,8 @@ SC_MODULE(shader) {
     blocking_in<result_t> p_rtcore_result;
 
     SC_HAS_PROCESS(shader);
-    shader(sc_module_name mn, const char *ray_queries_path) : sc_module(mn) {
+    shader(sc_module_name mn, const char *ray_queries_path, mem &mem_ref) : sc_module(mn),
+                                                                            mem_ref(mem_ref) {
         ray_queries_file.open(ray_queries_path, std::ios::in | std::ios::binary);
         sc_assert(ray_queries_file.good());
 
@@ -24,6 +25,7 @@ SC_MODULE(shader) {
             ray_t ray{r[0], r[1], r[2], r[3], r[4], r[5], 0.0f, r[6]};
             p_rtcore_ray->write(ray);
             int id = p_rtcore_id->read();
+            mem_ref.direct_traverse(ray, answer[id].intersected, answer[id].t, answer[id].u, answer[id].v);
             std::cout << name() << "@" << sc_time_stamp() << ": ray sent, id=" << id << std::endl;
         }
     }
@@ -32,11 +34,19 @@ SC_MODULE(shader) {
         while (true) {
             wait(cycle);
             result_t result = p_rtcore_result->read();
+            sc_assert(result.intersected == answer[result.id].intersected);
             std::cout << name() << " @ " << sc_time_stamp() << ": result received, id=" << result.id << std::endl;
         }
     }
 
+    mem &mem_ref;
     std::ifstream ray_queries_file;
+    struct {
+        bool intersected;
+        float t;
+        float u;
+        float v;
+    } answer[num_working_rays];
 };
 
 #endif //RTCORE_SYSTEMC_SHADER_HPP
