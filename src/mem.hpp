@@ -93,8 +93,9 @@ SC_MODULE(mem) {
     }
 
     bvh::Bvh<float> bvh;
-    std::vector<bvh::Triangle<float>> bvh_triangles;
     std::vector<trig_t> trigs;
+
+    std::vector<bvh::Triangle<float>> bvh_triangles;
     std::shared_ptr<bvh::SingleRayTraverser<bvh::Bvh<float>>> traverser;
     std::shared_ptr<bvh::ClosestPrimitiveIntersector<bvh::Bvh<float>, bvh::Triangle<float>>> primitive_intersector;
 };
