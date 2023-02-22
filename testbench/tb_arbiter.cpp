@@ -15,7 +15,7 @@ SC_MODULE(master) {
     void thread() {
         int curr = start;
         while (true){
-            wait(rand()%5, SC_NS);
+            wait(rand()%5 * cycle);
             std::cout << name() << " @ " << sc_time_stamp() << ": waiting to send request..." << std::endl;
             req->write(curr);
             std::cout << name() << " @ " << sc_time_stamp() << ": request sent!" << std::endl;
@@ -24,7 +24,7 @@ SC_MODULE(master) {
             std::cout << name() << " @ " << sc_time_stamp() << ": waiting to receive response..." << std::endl;
             resp->read(val);
             std::cout << name() << " @ " << sc_time_stamp() << ": response received!" << std::endl;
-            wait(1, SC_NS);
+            wait(cycle);
         }
     }
 };
@@ -43,7 +43,7 @@ SC_MODULE(slave) {
             std::cout << name() << " @ " << sc_time_stamp() << ": waiting to receive request..." << std::endl;
             req->read(val);
             std::cout << name() << " @ " << sc_time_stamp() << ": request received!" << std::endl;
-            wait(5, SC_NS);
+            wait(5 * cycle);
             std::cout << name() << " @ " << sc_time_stamp() << ": waiting to send response..." << std::endl;
             resp->write(val);
             std::cout << name() << " @ " << sc_time_stamp() << ": response sent!" << std::endl;
@@ -84,6 +84,6 @@ int sc_main(int, char **) {
     slave_i.req(arbiter_to_slave);
     slave_i.resp(slave_to_arbiter);
 
-    sc_start(100, SC_NS);
+    sc_start(100 * cycle);
     return 0;
 }

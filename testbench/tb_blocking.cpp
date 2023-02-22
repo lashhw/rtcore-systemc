@@ -2,6 +2,7 @@
 using namespace sc_core;
 
 #include "../src/blocking.hpp"
+#include "../src/utility.hpp"
 
 SC_MODULE(consumer) {
     blocking_in<int> in;
@@ -10,12 +11,12 @@ SC_MODULE(consumer) {
     }
     void thread() {
         while (true) {
-            wait(rand()%2, SC_NS);
+            wait(rand()%2 * cycle);
             std::cout << name() << " @ " << sc_time_stamp() << ": read request sent!" << std::endl;
             int val;
             in->read(val);
             std::cout << name() << " @ " << sc_time_stamp() << ": (" << val << ") read!" << std::endl;
-            wait(1, SC_NS);
+            wait(cycle);
         }
     }
 };
@@ -28,12 +29,12 @@ SC_MODULE(producer) {
     void thread() {
         int curr = 0;
         while (true) {
-            wait(rand()%2, SC_NS);
+            wait(rand()%2 * cycle);
             int val = curr++;
             std::cout << name() << " @ " << sc_time_stamp() << ": write request (" << val << ") sent!" << std::endl;
             out->write(val);
             std::cout << name() << " @ " << sc_time_stamp() << ": write request (" << val << ") granted!" << std::endl;
-            wait(1, SC_NS);
+            wait(cycle);
         }
     }
 };
@@ -45,6 +46,6 @@ int sc_main(int, char **) {
     producer producer_i("producer");
     producer_i.out(blocking_i);
 
-    sc_start(100, SC_NS);
+    sc_start(100 * cycle);
     return 0;
 }

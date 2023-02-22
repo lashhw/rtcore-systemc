@@ -14,7 +14,7 @@ SC_MODULE(consumer) {
     }
     void thread() {
         while (true) {
-            wait(rand()%2, SC_NS);
+            wait(rand()%2 * cycle);
             std::cout << name() << " @ " << sc_time_stamp() << ": read request sent!" << std::endl;
             int val[NUM_CONSUMER];
             fifo_in->read(val);
@@ -22,7 +22,7 @@ SC_MODULE(consumer) {
             for (int i : val)
                 std::cout << i << " ";
             std::cout << ") read!" << std::endl;
-            wait(1, SC_NS);
+            wait(cycle);
         }
     }
 };
@@ -35,7 +35,7 @@ SC_MODULE(producer) {
     void thread() {
         int curr = 0;
         while (true) {
-            wait(rand()%2, SC_NS);
+            wait(rand()%2 * cycle);
             int val[NUM_PRODUCER];
             for (int i = 0; i < NUM_PRODUCER; i++)
                 val[i] = curr++;
@@ -48,7 +48,7 @@ SC_MODULE(producer) {
             for (int i : val)
                 std::cout << i << " ";
             std::cout << ") granted!" << std::endl;
-            wait(1, SC_NS);
+            wait(cycle);
         }
     }
 };
@@ -60,6 +60,6 @@ int sc_main(int, char **) {
     producer producer_i("producer");
     producer_i.fifo_out(sync_fifo_i);
 
-    sc_start(100, SC_NS);
+    sc_start(100 * cycle);
     return 0;
 }
