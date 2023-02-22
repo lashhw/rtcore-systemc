@@ -33,12 +33,27 @@ class sync_fifo : public sc_channel,
                   public sync_fifo_in_if<T, num_read>,
                   public sync_fifo_out_if<T, num_write> {
 public:
+    enum state_t {
+        UTILIZE, STARVE, STALL
+    };
+
     SC_CTOR(sync_fifo) {
         curr = 0;
         size = 0;
         read_granted_flag = false;
         write_granted_flag = false;
+        last_state = UTILIZE;
+        last_state_time = sc_time();
+        utilize_duration = sc_time();
+        starve_duration = sc_time();
+        stall_duration = sc_time();
         SC_THREAD(main_thread);
+    }
+
+    ~sync_fifo() {
+        std::cout << name() << ": UTILIZE " << utilize_duration << std::endl;
+        std::cout << name() << ": STARVE " << starve_duration << std::endl;
+        std::cout << name() << ": STALL " << stall_duration << std::endl;
     }
 
     const sc_event &data_written_event() const override {
@@ -55,8 +70,12 @@ public:
 
     // blocking read
     void read(T *val) override {
-        while (size < num_read)
-            wait(write_updated);
+        if (size < num_read) {
+            update_state(STARVE);
+            while (size < num_read)
+                wait(write_updated);
+            update_state(UTILIZE);
+        }
         for (int i = 0; i < num_read; i++)
             val[i] = data[(curr+i)%max_size];
         read_granted_flag = true;
@@ -77,8 +96,12 @@ public:
 
     // blocking write
     void write(const T *val) override {
-        while (max_size - size < num_write)
-            wait(read_updated);
+        if (max_size - size < num_write) {
+            update_state(STALL);
+            while (max_size - size < num_write)
+                wait(read_updated);
+            update_state(UTILIZE);
+        }
         for (int i = 0; i < num_write; i++)
             write_data[i] = val[i];
         write_granted_flag = true;
@@ -106,6 +129,22 @@ public:
         direct_write(&val);
     }
 
+    void update_state(state_t new_state) {
+        switch (last_state) {
+            case UTILIZE:
+                utilize_duration += sc_time_stamp() - last_state_time;
+                break;
+            case STARVE:
+                starve_duration += sc_time_stamp() - last_state_time;
+                break;
+            case STALL:
+                stall_duration += sc_time_stamp() - last_state_time;
+                break;
+        }
+        last_state = new_state;
+        last_state_time = sc_time_stamp();
+    }
+
 private:
     void main_thread() {
         while (true) {
@@ -129,14 +168,6 @@ private:
                 write_granted_flag = false;
                 write_updated.notify(half_cycle);
             }
-
-            /*
-            // print
-            std::cout << "sync_fifo @ " << sc_time_stamp() << ": ";
-            for (int i = 0; i < size; i++)
-                std::cout << data[(curr+i)%max_size] << " ";
-            std::cout << std::endl;
-             */
         }
     }
 
@@ -152,6 +183,12 @@ private:
     bool write_granted_flag;
     sc_event write_granted;
     sc_event write_updated;
+
+    state_t last_state;
+    sc_time last_state_time;
+    sc_time utilize_duration;
+    sc_time starve_duration;
+    sc_time stall_duration;
 };
 
 #endif //RTCORE_SYSTEMC_SYNC_FIFO_HPP
