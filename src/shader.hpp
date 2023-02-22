@@ -26,7 +26,7 @@ SC_MODULE(shader) {
             p_rtcore_ray->write(ray);
             int id = p_rtcore_id->read();
             mem_ref.direct_traverse(ray, answer[id].intersected, answer[id].t, answer[id].u, answer[id].v);
-            std::cout << name() << "@" << sc_time_stamp() << ": ray sent, id=" << id << std::endl;
+            std::cout << name() << " @ " << sc_time_stamp() << ": ray sent, id=" << id << std::endl;
         }
     }
 
