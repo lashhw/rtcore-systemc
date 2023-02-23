@@ -51,6 +51,7 @@ public:
     }
 
     ~sync_fifo() {
+        update_state(UTILIZE);
         std::cout << name() << ": UTILIZE " << utilize_duration << std::endl;
         std::cout << name() << ": STARVE " << starve_duration << std::endl;
         std::cout << name() << ": STALL " << stall_duration << std::endl;
