@@ -69,6 +69,18 @@ struct ist_ctrl_req_t {
     int first_trig_idx;
 };
 
+struct ist_req_t {
+    ray_and_id_t ray_and_id;
+    trig_t trig;
+};
+
+struct ist_resp_t {
+    ray_and_id_t ray_and_id;
+    bool intersected;
+    float u;
+    float v;
+};
+
 struct mem_req_t {
     enum { BBOX, NODE, TRIG_IDX, TRIG } type;
     int idx;

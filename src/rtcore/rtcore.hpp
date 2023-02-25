@@ -21,6 +21,7 @@ SC_MODULE(rtcore) {
     lp m_lp;
     hp m_hp;
     ist_ctrl m_ist_ctrl;
+    ist m_ist;
 
     blocking<mem_req_t> b_arbiter_to_mem;
     blocking<mem_resp_t> b_mem_to_arbiter;
@@ -40,6 +41,8 @@ SC_MODULE(rtcore) {
     sync_fifo<trv_ctrl_req_t, fifo_size, 1, num_hp> f_hp_to_trv_ctrl;
     sync_fifo<result_t, fifo_size> f_trv_ctrl_to_shader;
     sync_fifo<ist_ctrl_req_t, fifo_size> f_trv_ctrl_to_ist_ctrl;
+    sync_fifo<ist_req_t, fifo_size, num_ist, 1> f_ist_ctrl_to_ist;
+    sync_fifo<ist_resp_t, fifo_size, 1, num_ist> f_ist_to_ist_ctrl;
     sync_fifo<trv_ctrl_req_t, fifo_size> f_ist_ctrl_to_trv_ctrl;
 
     rtcore(sc_module_name mn) : sc_module(mn),
@@ -49,6 +52,7 @@ SC_MODULE(rtcore) {
                                 m_lp("m_lp"),
                                 m_hp("m_hp"),
                                 m_ist_ctrl("m_ist_ctrl"),
+                                m_ist("m_ist"),
                                 b_arbiter_to_mem("b_arbiter_to_mem"),
                                 b_mem_to_arbiter("b_mem_to_arbiter"),
                                 b_trv_ctrl_to_arbiter("b_trv_ctrl_to_arbiter"),
@@ -66,6 +70,8 @@ SC_MODULE(rtcore) {
                                 f_hp_to_trv_ctrl("f_hp_to_trv_ctrl"),
                                 f_trv_ctrl_to_shader("f_trv_ctrl_to_shader"),
                                 f_trv_ctrl_to_ist_ctrl("f_trv_ctrl_to_ist_ctrl"),
+                                f_ist_ctrl_to_ist("f_ist_ctrl_to_ist"),
+                                f_ist_to_ist_ctrl("f_ist_to_ist_ctrl"),
                                 f_ist_ctrl_to_trv_ctrl("f_ist_ctrl_to_trv_ctrl") {
         // link export
         p_mem_req(b_arbiter_to_mem);
@@ -116,6 +122,12 @@ SC_MODULE(rtcore) {
         m_ist_ctrl.p_mem_resp(b_arbiter_to_ist_ctrl);
         m_ist_ctrl.p_trv_ctrl_in(f_trv_ctrl_to_ist_ctrl);
         m_ist_ctrl.p_trv_ctrl_out(f_ist_ctrl_to_trv_ctrl);
+        m_ist_ctrl.p_ist_out(f_ist_ctrl_to_ist);
+        m_ist_ctrl.p_ist_in(f_ist_to_ist_ctrl);
+
+        // link ist
+        m_ist.p_ist_ctrl_in(f_ist_ctrl_to_ist);
+        m_ist.p_ist_ctrl_out(f_ist_to_ist_ctrl);
     }
 };
 

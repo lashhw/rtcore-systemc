@@ -19,7 +19,7 @@ SC_MODULE(hp) {
             bbox_req_t req[num_hp];
             p_bbox_ctrl->read(req);
 
-            wait(hp_latency*cycle);
+            wait(hp_latency * cycle);
             trv_ctrl_req_t trv_ctrl_req[num_hp];
             for (int i = 0; i < num_hp; i++) {
                 trv_ctrl_req[i].type = trv_ctrl_req_t::BBOX;
