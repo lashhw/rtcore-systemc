@@ -10,53 +10,68 @@ SC_MODULE(ist_ctrl) {
     blocking_in<ist_ctrl_req_t> p_trv_ctrl_in;
     blocking_out<trv_ctrl_req_t> p_trv_ctrl_out;
     blocking_out<ist_req_t> p_ist_out;
-    blocking_in<ist_resp_t> p_ist_in;
+    blocking_in<ist_ctrl_req_t> p_ist_in;
 
-    SC_CTOR(ist_ctrl) {
+    arbiter<ist_ctrl_req_t, void, 2> m_arbiter;
+
+    blocking<ist_ctrl_req_t> b_arbiter_to_thread_1;
+
+    SC_HAS_PROCESS(ist_ctrl);
+    ist_ctrl(sc_module_name mn) : sc_module(mn),
+                                  m_arbiter("m_arbiter"),
+                                  b_arbiter_to_thread_1("b_arbiter_to_thread_1") {
+        m_arbiter.p_slave_req[0](p_trv_ctrl_in);
+        m_arbiter.p_slave_req[1](p_ist_in);
+        m_arbiter.p_master_req(b_arbiter_to_thread_1);
+
         SC_THREAD(thread_1);
     }
 
     void thread_1() {
         while (true) {
             wait(cycle);
-            ist_ctrl_req_t ist_ctrl_req = p_trv_ctrl_in->read();
-            trv_ctrl_req_t trv_ctrl_req;
-            trv_ctrl_req.type = trv_ctrl_req_t::IST;
-            trv_ctrl_req.ist.ray_and_id = ist_ctrl_req.ray_and_id;
-            trv_ctrl_req.ist.intersected = false;
+            ist_ctrl_req_t ist_ctrl_req = b_arbiter_to_thread_1.read();
 
-            for (int i = 0; i < ist_ctrl_req.num_trigs; i++) {
-                wait(cycle);
-                mem_req_t mem_req;
-                mem_req.type = mem_req_t::TRIG_IDX;
-                mem_req.idx = ist_ctrl_req.first_trig_idx + i;
+            wait(cycle);
+            if (ist_ctrl_req.num_trigs == 0) {
+                trv_ctrl_req_t trv_ctrl_req = {
+                    .type = trv_ctrl_req_t::IST,
+                    .ist = {
+                        .ray_and_id = ist_ctrl_req.ray_and_id,
+                        .intersected = ist_ctrl_req.intersected,
+                        .u = ist_ctrl_req.u,
+                        .v = ist_ctrl_req.v
+                    }
+                };
+                p_trv_ctrl_out->write(trv_ctrl_req);
+            } else {
+                mem_req_t mem_req = {
+                    .type = mem_req_t::TRIG_IDX,
+                    .idx = ist_ctrl_req.first_trig_idx
+                };
                 p_mem_req->write(mem_req);
 
                 wait(cycle);
                 mem_resp_t mem_resp = p_mem_resp->read();
-                mem_req.type = mem_req_t::TRIG;
-                mem_req.idx = mem_resp.trig_idx;
+                mem_req = {
+                    .type = mem_req_t::TRIG,
+                    .idx = mem_resp.trig_idx
+                };
                 p_mem_req->write(mem_req);
 
                 wait(cycle);
                 mem_resp = p_mem_resp->read();
-                ist_req_t ist_req;
-                ist_req.ray_and_id = trv_ctrl_req.ist.ray_and_id;
-                ist_req.trig = mem_resp.trig;
+                ist_req_t ist_req = {
+                    .ray_and_id = ist_ctrl_req.ray_and_id,
+                    .num_trigs = ist_ctrl_req.num_trigs,
+                    .first_trig_idx = ist_ctrl_req.first_trig_idx,
+                    .intersected = ist_ctrl_req.intersected,
+                    .u = ist_ctrl_req.u,
+                    .v = ist_ctrl_req.v,
+                    .trig = mem_resp.trig
+                };
                 p_ist_out->write(ist_req);
-
-                wait(cycle);
-                ist_resp_t ist_resp = p_ist_in->read();
-                trv_ctrl_req.ist.ray_and_id.ray = ist_resp.ray_and_id.ray;
-                if (ist_resp.intersected) {
-                    trv_ctrl_req.ist.intersected = true;
-                    trv_ctrl_req.ist.u = ist_resp.u;
-                    trv_ctrl_req.ist.v = ist_resp.v;
-                }
             }
-
-            wait(cycle);
-            p_trv_ctrl_out->write(trv_ctrl_req);
         }
     }
 };

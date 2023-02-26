@@ -8,6 +8,7 @@ struct ray_t {
     float t_max;
 };
 
+// TODO: add intersected trig idx
 struct result_t {
     int id;
     bool intersected;
@@ -67,18 +68,19 @@ struct ist_ctrl_req_t {
     ray_and_id_t ray_and_id;
     int num_trigs;
     int first_trig_idx;
+    bool intersected;
+    float u;
+    float v;
 };
 
 struct ist_req_t {
     ray_and_id_t ray_and_id;
-    trig_t trig;
-};
-
-struct ist_resp_t {
-    ray_and_id_t ray_and_id;
+    int num_trigs;
+    int first_trig_idx;
     bool intersected;
     float u;
     float v;
+    trig_t trig;
 };
 
 struct mem_req_t {

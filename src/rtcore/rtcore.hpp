@@ -42,7 +42,7 @@ SC_MODULE(rtcore) {
     sync_fifo<result_t, fifo_size> f_trv_ctrl_to_shader;
     sync_fifo<ist_ctrl_req_t, fifo_size> f_trv_ctrl_to_ist_ctrl;
     sync_fifo<ist_req_t, fifo_size, num_ist, 1> f_ist_ctrl_to_ist;
-    sync_fifo<ist_resp_t, fifo_size, 1, num_ist> f_ist_to_ist_ctrl;
+    sync_fifo<ist_ctrl_req_t, fifo_size, 1, num_ist> f_ist_to_ist_ctrl;
     sync_fifo<trv_ctrl_req_t, fifo_size> f_ist_ctrl_to_trv_ctrl;
 
     rtcore(sc_module_name mn) : sc_module(mn),

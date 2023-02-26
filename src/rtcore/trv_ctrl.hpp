@@ -92,6 +92,7 @@ SC_MODULE(trv_ctrl) {
                 ist_ctrl_req.ray_and_id = req.ray_and_id;
                 ist_ctrl_req.num_trigs = num_trigs;
                 ist_ctrl_req.first_trig_idx = resp.node[1];
+                ist_ctrl_req.intersected = false;
                 p_ist_ctrl_out->write(ist_ctrl_req);
             }
         }
