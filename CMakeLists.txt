@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 add_subdirectory(src/third_party/bvh)
 link_libraries(systemc)
 link_libraries(bvh)
+link_libraries(mpfr)
 
 add_executable(tb_arbiter testbench/tb_arbiter.cpp)
 add_executable(tb_blocking testbench/tb_blocking.cpp)

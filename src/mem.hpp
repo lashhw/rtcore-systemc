@@ -6,6 +6,7 @@
 #include <bvh/single_ray_traverser.hpp>
 #include <bvh/primitive_intersectors.hpp>
 #include "third_party/happly/happly.h"
+#include "mark.hpp"
 #include "params.hpp"
 #include "payload_t.hpp"
 #include "blocking.hpp"
@@ -42,6 +43,10 @@ SC_MODULE(mem) {
 
         bvh::SweepSahBuilder<bvh::Bvh<float>> builder(bvh);
         builder.build(global_bbox, bboxes.get(), centers.get(), bvh_triangles.size());
+
+        std::vector<bool> low_precision;
+        HighPrecisionMarker marker(7, 8);
+        marker.mark(bvh, 0.5, 0.45, low_precision);
 
         traverser = std::make_shared<bvh::SingleRayTraverser<bvh::Bvh<float>>>(bvh);
         primitive_intersector = std::make_shared<bvh::ClosestPrimitiveIntersector<bvh::Bvh<float>, bvh::Triangle<float>>>(bvh, bvh_triangles.data());
