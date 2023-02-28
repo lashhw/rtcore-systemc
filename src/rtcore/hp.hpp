@@ -22,9 +22,13 @@ SC_MODULE(hp) {
             wait(hp_latency * cycle);
             trv_ctrl_req_t trv_ctrl_req[num_hp];
             for (int i = 0; i < num_hp; i++) {
-                trv_ctrl_req[i].type = trv_ctrl_req_t::BBOX;
-                trv_ctrl_req[i].bbox.ray_and_id = req[i].ray_and_id;
-                trv_ctrl_req[i].bbox.left_node_idx = req[i].left_node_idx;
+                trv_ctrl_req[i] = {
+                    .type = trv_ctrl_req_t::BBOX,
+                    .bbox = {
+                        .ray_and_id = req[i].ray_and_id,
+                        .left_node_idx = req[i].left_node_idx
+                    }
+                };
                 bvh::Ray<float> ray = to_bvh_ray(req[i].ray_and_id.ray);
                 bvh::FastNodeIntersector<bvh::Bvh<float>> node_intersector(ray);
                 bvh::Bvh<float>::Node left_node{}, right_node{};
