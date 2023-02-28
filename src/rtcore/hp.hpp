@@ -25,12 +25,7 @@ SC_MODULE(hp) {
                 trv_ctrl_req[i].type = trv_ctrl_req_t::BBOX;
                 trv_ctrl_req[i].bbox.ray_and_id = req[i].ray_and_id;
                 trv_ctrl_req[i].bbox.left_node_idx = req[i].left_node_idx;
-                bvh::Ray<float> ray(
-                    {req[i].ray_and_id.ray.origin[0], req[i].ray_and_id.ray.origin[1], req[i].ray_and_id.ray.origin[2]},
-                    {req[i].ray_and_id.ray.dir[0], req[i].ray_and_id.ray.dir[1], req[i].ray_and_id.ray.dir[2]},
-                    req[i].ray_and_id.ray.t_min,
-                    req[i].ray_and_id.ray.t_max
-                );
+                bvh::Ray<float> ray = to_bvh_ray(req[i].ray_and_id.ray);
                 bvh::FastNodeIntersector<bvh::Bvh<float>> node_intersector(ray);
                 bvh::Bvh<float>::Node left_node{}, right_node{};
                 for (int j = 0; j < 6; j++) {
