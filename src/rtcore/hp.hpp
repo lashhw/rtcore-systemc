@@ -32,7 +32,7 @@ SC_MODULE(hp) {
                     req[i].ray_and_id.ray.t_max
                 );
                 bvh::FastNodeIntersector<bvh::Bvh<float>> node_intersector(ray);
-                bvh::Bvh<float>::Node left_node, right_node;
+                bvh::Bvh<float>::Node left_node{}, right_node{};
                 for (int j = 0; j < 6; j++) {
                     left_node.bounds[j] = req[i].left_bbox[j];
                     right_node.bounds[j] = req[i].right_bbox[j];

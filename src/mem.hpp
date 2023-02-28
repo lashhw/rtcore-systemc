@@ -17,22 +17,28 @@ SC_MODULE(mem) {
     blocking_out<mem_resp_t> p_rtcore_resp;
 
     SC_HAS_PROCESS(mem);
-    mem(const char *mn, const char *model_ply_path) : sc_module(mn) {
+    mem(const sc_module_name &mn, const char *model_ply_path) : sc_module(mn) {
         happly::PLYData ply_data(model_ply_path);
         std::vector<std::array<double, 3>> v_pos = ply_data.getVertexPositions();
         std::vector<std::vector<size_t>> f_idx = ply_data.getFaceIndices<size_t>();
 
         for (auto &face : f_idx) {
-            trig_t trig;
+            trig_t trig{};
             for (int i = 0; i < 3; i++) {
-                trig.p0[i] = v_pos[face[0]][i];
-                trig.p1[i] = v_pos[face[1]][i];
-                trig.p2[i] = v_pos[face[2]][i];
+                trig.p0[i] = float(v_pos[face[0]][i]);
+                trig.p1[i] = float(v_pos[face[1]][i]);
+                trig.p2[i] = float(v_pos[face[2]][i]);
             }
             trigs.push_back(trig);
-            bvh_triangles.emplace_back(bvh::Vector3<float>(v_pos[face[0]][0], v_pos[face[0]][1], v_pos[face[0]][2]),
-                                       bvh::Vector3<float>(v_pos[face[1]][0], v_pos[face[1]][1], v_pos[face[1]][2]),
-                                       bvh::Vector3<float>(v_pos[face[2]][0], v_pos[face[2]][1], v_pos[face[2]][2]));
+            bvh_triangles.emplace_back(bvh::Vector3<float>(float(v_pos[face[0]][0]),
+                                                           float(v_pos[face[0]][1]),
+                                                           float(v_pos[face[0]][2])),
+                                       bvh::Vector3<float>(float(v_pos[face[1]][0]),
+                                                           float(v_pos[face[1]][1]),
+                                                           float(v_pos[face[1]][2])),
+                                       bvh::Vector3<float>(float(v_pos[face[2]][0]),
+                                                           float(v_pos[face[2]][1]),
+                                                           float(v_pos[face[2]][2])));
         }
 
         auto [bboxes, centers] = bvh::compute_bounding_boxes_and_centers(bvh_triangles.data(), bvh_triangles.size());
@@ -60,18 +66,18 @@ SC_MODULE(mem) {
             mem_req_t req = p_rtcore_req->read();
 
             wait(mem_latency*cycle);
-            mem_resp_t resp;
+            mem_resp_t resp{};
             switch (req.type) {
                 case mem_req_t::BBOX:
                     for (int i = 0; i < 6; i++)
                         resp.bbox[i] = bvh.nodes[req.idx].bounds[i];
                     break;
                 case mem_req_t::NODE:
-                    resp.node[0] = bvh.nodes[req.idx].primitive_count;
-                    resp.node[1] = bvh.nodes[req.idx].first_child_or_primitive;
+                    resp.node[0] = int(bvh.nodes[req.idx].primitive_count);
+                    resp.node[1] = int(bvh.nodes[req.idx].first_child_or_primitive);
                     break;
                 case mem_req_t::TRIG_IDX:
-                    resp.trig_idx = bvh.primitive_indices[req.idx];
+                    resp.trig_idx = int(bvh.primitive_indices[req.idx]);
                     break;
                 case mem_req_t::TRIG:
                     for (int i = 0; i < 3; i++) {

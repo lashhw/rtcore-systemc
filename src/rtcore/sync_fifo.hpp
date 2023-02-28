@@ -50,7 +50,7 @@ public:
         SC_THREAD(main_thread);
     }
 
-    ~sync_fifo() {
+    ~sync_fifo() override {
         update_state(UTILIZE);
         std::cout << name() << ": UTILIZE " << utilize_duration << std::endl;
         std::cout << name() << ": STARVE " << starve_duration << std::endl;
