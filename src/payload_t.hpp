@@ -88,11 +88,6 @@ struct mem_req_t {
     int idx;
 };
 
-struct thread_2_req_t {
-    ray_and_id_t ray_and_id;
-    mem_req_t mem_req;
-};
-
 struct mem_resp_t {
     union {
         float bbox[6];

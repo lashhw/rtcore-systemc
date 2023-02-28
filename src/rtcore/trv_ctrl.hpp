@@ -5,6 +5,11 @@
 #include "arbiter.hpp"
 
 SC_MODULE(trv_ctrl) {
+    struct thread_2_req_t {
+        ray_and_id_t ray_and_id;
+        mem_req_t mem_req;
+    };
+
     blocking_out<mem_req_t> p_mem_req;
     blocking_in<mem_resp_t> p_mem_resp;
     blocking_in<ray_t> p_shader_ray;
