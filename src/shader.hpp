@@ -28,6 +28,7 @@ SC_MODULE(shader) {
             mem_ref.direct_traverse(ray, answer[id].intersected, answer[id].t, answer[id].u, answer[id].v);
             std::cout << name() << " @ " << sc_time_stamp() << ": ray sent, id=" << id << std::endl;
         }
+        std::cout << "TEST COMPLETED" << std::endl;
     }
 
     void thread_2() {
