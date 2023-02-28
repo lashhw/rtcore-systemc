@@ -90,7 +90,10 @@ struct mem_req_t {
 
 struct mem_resp_t {
     union {
-        float bbox[6];
+        struct {
+            bool low_precision;
+            float bounds[6];
+        } bbox;
         int node[2];
         int trig_idx;
         trig_t trig;

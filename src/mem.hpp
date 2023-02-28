@@ -50,7 +50,6 @@ SC_MODULE(mem) {
         bvh::SweepSahBuilder<bvh::Bvh<float>> builder(bvh);
         builder.build(global_bbox, bboxes.get(), centers.get(), bvh_triangles.size());
 
-        std::vector<bool> low_precision;
         HighPrecisionMarker marker(7, 8);
         marker.mark(bvh, 0.5, 0.45, low_precision);
 
@@ -69,8 +68,9 @@ SC_MODULE(mem) {
             mem_resp_t resp{};
             switch (req.type) {
                 case mem_req_t::BBOX:
+                    resp.bbox.low_precision = low_precision[req.idx];
                     for (int i = 0; i < 6; i++)
-                        resp.bbox[i] = bvh.nodes[req.idx].bounds[i];
+                        resp.bbox.bounds[i] = bvh.nodes[req.idx].bounds[i];
                     break;
                 case mem_req_t::NODE:
                     resp.node[0] = int(bvh.nodes[req.idx].primitive_count);
@@ -105,6 +105,7 @@ SC_MODULE(mem) {
 
     bvh::Bvh<float> bvh;
     std::vector<trig_t> trigs;
+    std::vector<bool> low_precision;
 
     std::vector<bvh::Triangle<float>> bvh_triangles;
     std::shared_ptr<bvh::SingleRayTraverser<bvh::Bvh<float>>> traverser;

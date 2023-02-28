@@ -29,7 +29,7 @@ SC_MODULE(bbox_ctrl) {
                 .left_node_idx = req.left_node_idx
             };
             for (int i = 0; i < 6; i++)
-                bbox_req.left_bbox[i] = mem_resp.bbox[i];
+                bbox_req.left_bbox[i] = mem_resp.bbox.bounds[i];
 
             wait(cycle);
             mem_req.type = mem_req_t::BBOX;
@@ -39,8 +39,11 @@ SC_MODULE(bbox_ctrl) {
             wait(cycle);
             mem_resp = p_mem_resp->read();
             for (int i = 0; i < 6; i++)
-                bbox_req.right_bbox[i] = mem_resp.bbox[i];
-            p_hp->write(bbox_req);
+                bbox_req.right_bbox[i] = mem_resp.bbox.bounds[i];
+            if (mem_resp.bbox.low_precision)
+                p_lp->write(bbox_req);
+            else
+                p_hp->write(bbox_req);
         }
     }
 };

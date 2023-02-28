@@ -8,6 +8,7 @@ constexpr int num_hp = 4;
 constexpr int num_ist = 4;
 
 constexpr int mem_latency = 5;
+constexpr int lp_latency = 5;
 constexpr int hp_latency = 5;
 constexpr int ist_latency = 5;
 
