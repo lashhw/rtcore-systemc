@@ -2,10 +2,10 @@
 #define RTCORE_SYSTEMC_PARAMS_HPP
 
 constexpr int num_working_rays = 32;
-constexpr int fifo_size = 32;
+constexpr int fifo_size = 8;
 constexpr int num_lp = 4;
 constexpr int num_hp = 4;
-constexpr int num_ist = 1;
+constexpr int num_ist = 4;
 
 constexpr int mem_latency = 5;
 constexpr int hp_latency = 5;
