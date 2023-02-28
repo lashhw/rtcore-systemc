@@ -17,9 +17,9 @@ SC_MODULE(ist_ctrl) {
     blocking<ist_ctrl_req_t> b_arbiter_to_thread_1;
 
     SC_HAS_PROCESS(ist_ctrl);
-    ist_ctrl(sc_module_name mn) : sc_module(mn),
-                                  m_arbiter("m_arbiter"),
-                                  b_arbiter_to_thread_1("b_arbiter_to_thread_1") {
+    ist_ctrl(const char *mn) : sc_module(mn),
+                               m_arbiter("m_arbiter"),
+                               b_arbiter_to_thread_1("b_arbiter_to_thread_1") {
         m_arbiter.p_slave_req[0](p_trv_ctrl_in);
         m_arbiter.p_slave_req[1](p_ist_in);
         m_arbiter.p_master_req(b_arbiter_to_thread_1);

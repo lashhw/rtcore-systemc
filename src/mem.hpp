@@ -17,7 +17,7 @@ SC_MODULE(mem) {
     blocking_out<mem_resp_t> p_rtcore_resp;
 
     SC_HAS_PROCESS(mem);
-    mem(sc_module_name mn, const char *model_ply_path) : sc_module(mn) {
+    mem(const char *mn, const char *model_ply_path) : sc_module(mn) {
         happly::PLYData ply_data(model_ply_path);
         std::vector<std::array<double, 3>> v_pos = ply_data.getVertexPositions();
         std::vector<std::vector<size_t>> f_idx = ply_data.getFaceIndices<size_t>();

@@ -32,12 +32,12 @@ SC_MODULE(trv_ctrl) {
     } h_result[num_working_rays];
 
     SC_HAS_PROCESS(trv_ctrl);
-    trv_ctrl(sc_module_name mn) : sc_module(mn),
-                                  m_arbiter("m_arbiter"),
-                                  b_arbiter_to_thread_3("b_arbiter_to_thread_3"),
-                                  b_thread_3_to_thread_2("b_thread_3_to_thread_2"),
-                                  f_shader_fifo("f_shader_fifo"),
-                                  f_free_fifo("f_free_fifo") {
+    trv_ctrl(const char *mn) : sc_module(mn),
+                               m_arbiter("m_arbiter"),
+                               b_arbiter_to_thread_3("b_arbiter_to_thread_3"),
+                               b_thread_3_to_thread_2("b_thread_3_to_thread_2"),
+                               f_shader_fifo("f_shader_fifo"),
+                               f_free_fifo("f_free_fifo") {
         m_arbiter.p_slave_req[0](f_shader_fifo);
         m_arbiter.p_slave_req[1](p_lp);
         m_arbiter.p_slave_req[2](p_hp);
