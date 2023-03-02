@@ -40,10 +40,7 @@ SC_MODULE(bbox_ctrl) {
             mem_resp = p_mem_resp->read();
             for (int i = 0; i < 6; i++)
                 bbox_req.right_bbox[i] = mem_resp.bbox.bounds[i];
-            if (mem_resp.bbox.low_precision)
-                p_lp->write(bbox_req);
-            else
-                p_hp->write(bbox_req);
+            p_hp->write(bbox_req);
         }
     }
 };
