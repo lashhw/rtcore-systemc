@@ -5,3 +5,6 @@
 	path = src/third_party/bvh
 	url = https://github.com/madmann91/bvh.git
 	branch = v1
+[submodule "src/third_party/DRAMsim3"]
+	path = src/third_party/DRAMsim3
+	url = https://github.com/umd-memsys/DRAMsim3.git
