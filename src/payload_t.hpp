@@ -23,6 +23,13 @@ struct trig_t {
     float p2[3];
 };
 
+struct node_t {
+    bool lp[2];
+    int num_trigs;
+    uint64_t ptr;
+    float bbox[6];
+};
+
 struct ray_and_id_t {
     ray_t ray;
     int id;

@@ -9,8 +9,8 @@ SC_MODULE(shader) {
     blocking_in<result_t> p_rtcore_result;
 
     SC_HAS_PROCESS(shader);
-    shader(const sc_module_name &mn, const char *ray_queries_path, mem &mem_ref) : sc_module(mn),
-                                                                                   mem_ref(mem_ref) {
+    shader(const sc_module_name &mn, const char *ray_queries_path, dram &mem_ref) : sc_module(mn),
+                                                                                    mem_ref(mem_ref) {
         ray_queries_file.open(ray_queries_path, std::ios::in | std::ios::binary);
         sc_assert(ray_queries_file.good());
 
@@ -47,7 +47,7 @@ SC_MODULE(shader) {
         }
     }
 
-    mem &mem_ref;
+    dram &mem_ref;
     std::ifstream ray_queries_file;
     struct {
         bool intersected;

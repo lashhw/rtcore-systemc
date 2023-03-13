@@ -2,12 +2,13 @@
 using namespace sc_core;
 
 #include "../src/mem.hpp"
+#include "../src/dram.hpp"
 #include "../src/shader.hpp"
 #include "../src/rtcore/rtcore.hpp"
 
 int sc_main(int, char **) {
     // module instantiation
-    mem m_mem("m_mem", "kitchen.ply");
+    dram m_mem("m_mem", "kitchen.ply");
     shader m_shader("m_shader", "ray_queries.bin", m_mem);
     rtcore m_rtcore("m_rtcore");
 
