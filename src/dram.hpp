@@ -86,7 +86,7 @@ SC_MODULE(dram) {
         // std::unordered_map<int, int> trig_addr_invmap;  // trig_index -> dram_addr
         for (int i = 0; i < bvh_triangles.size(); i++) {
             trig_addr_invmap[i] = curr_addr;
-            curr_addr += 32;
+            curr_addr += 36;
         }
 
         // fill in ptr
