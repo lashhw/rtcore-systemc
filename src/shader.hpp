@@ -32,6 +32,7 @@ SC_MODULE(shader) {
         while (true) {
             wait(cycle);
             result_t result = p_rtcore_result->read();
+            std::cout << name() << " @ " << sc_time_stamp() << ": result received, id=" << result.id << std::endl;
             std::cout << "  [result] " << result.intersected;
             if (result.intersected)
                 std::cout << " " << result.t << " " << result.u << " " << result.v;
@@ -48,7 +49,6 @@ SC_MODULE(shader) {
             } else {
                 sc_assert(!answer[result.id].intersected);
             }
-            std::cout << name() << " @ " << sc_time_stamp() << ": result received, id=" << result.id << std::endl;
         }
     }
 
