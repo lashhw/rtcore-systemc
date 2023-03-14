@@ -6,7 +6,7 @@ SC_MODULE(lp) {
     sync_fifo_out<trv_ctrl_req_t, num_lp> p_trv_ctrl;
 
     SC_CTOR(lp) {
-            SC_THREAD(thread_1);
+        SC_THREAD(thread_1);
     }
 
     void thread_1() {
@@ -22,12 +22,13 @@ SC_MODULE(lp) {
                     .type = trv_ctrl_req_t::BBOX,
                     .bbox = {
                         .ray_and_id = req[i].ray_and_id,
-                        .left_node_idx = req[i].left_node_idx
+                        .left_node_ptr = req[i].left_node_ptr
                     }
                 };
                 bvh::Ray<float> ray = to_bvh_ray(req[i].ray_and_id.ray);
                 bvh::FastNodeIntersector<bvh::Bvh<float>> node_intersector(ray);
-                bvh::Bvh<float>::Node left_node{}, right_node{};
+                bvh::Bvh<float>::Node left_node = {};
+                bvh::Bvh<float>::Node right_node = {};
                 for (int j = 0; j < 6; j++) {
                     left_node.bounds[j] = req[i].left_bbox[j];
                     right_node.bounds[j] = req[i].right_bbox[j];

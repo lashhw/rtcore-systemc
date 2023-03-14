@@ -5,8 +5,8 @@
 #include "ist.hpp"
 
 SC_MODULE(ist_ctrl) {
-    blocking_out<mem_req_t> p_mem_req;
-    blocking_in<mem_resp_t> p_mem_resp;
+    blocking_out<dram_req_t> p_dram_req;
+    blocking_in<dram_resp_t> p_dram_resp;
     blocking_in<ist_ctrl_req_t> p_trv_ctrl_in;
     blocking_out<trv_ctrl_req_t> p_trv_ctrl_out;
     blocking_out<ist_req_t> p_ist_out;
@@ -45,30 +45,22 @@ SC_MODULE(ist_ctrl) {
                 };
                 p_trv_ctrl_out->write(trv_ctrl_req);
             } else {
-                mem_req_t mem_req = {
-                    .type = mem_req_t::TRIG_IDX,
-                    .idx = ist_ctrl_req.first_trig_idx
+                dram_req_t dram_req = {
+                    .type = dram_req_t::TRIG,
+                    .addr = ist_ctrl_req.trig_ptr
                 };
-                p_mem_req->write(mem_req);
+                p_dram_req->write(dram_req);
 
                 wait(cycle);
-                mem_resp_t mem_resp = p_mem_resp->read();
-                mem_req = {
-                    .type = mem_req_t::TRIG,
-                    .idx = mem_resp.trig_idx
-                };
-                p_mem_req->write(mem_req);
-
-                wait(cycle);
-                mem_resp = p_mem_resp->read();
+                dram_resp_t dram_resp = p_dram_resp->read();
                 ist_req_t ist_req = {
                     .ray_and_id = ist_ctrl_req.ray_and_id,
                     .num_trigs = ist_ctrl_req.num_trigs,
-                    .first_trig_idx = ist_ctrl_req.first_trig_idx,
+                    .trig_ptr = ist_ctrl_req.trig_ptr,
                     .intersected = ist_ctrl_req.intersected,
                     .u = ist_ctrl_req.u,
                     .v = ist_ctrl_req.v,
-                    .trig = mem_resp.trig
+                    .trig = dram_resp.trig
                 };
                 p_ist_out->write(ist_req);
             }

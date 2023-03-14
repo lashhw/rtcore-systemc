@@ -17,17 +17,20 @@ struct result_t {
     float v;
 };
 
-struct trig_t {
-    float p0[3];
-    float p1[3];
-    float p2[3];
+struct bbox_t {
+    float bounds[6];
 };
 
 struct node_t {
     bool lp[2];
     int num_trigs;
     uint64_t ptr;
-    float bbox[6];
+};
+
+struct trig_t {
+    float p0[3];
+    float p1[3];
+    float p2[3];
 };
 
 struct ray_and_id_t {
@@ -37,44 +40,44 @@ struct ray_and_id_t {
 
 struct bbox_ctrl_req_t {
     ray_and_id_t ray_and_id;
-    int left_node_idx;
+    bool lp[2];
+    uint64_t left_bbox_ptr;
 };
 
-struct bbox_result_t {
-    ray_and_id_t ray_and_id;
-    int left_node_idx;
-    bool left_hit;
-    bool right_hit;
-    bool left_first;
-};
-
-struct ist_result_t {
-    ray_and_id_t ray_and_id;
-    bool intersected;
-    float u;
-    float v;
-};
 
 struct trv_ctrl_req_t {
     enum { SHADER, BBOX, IST } type;
     union {
-        ray_and_id_t shader;
-        bbox_result_t bbox;
-        ist_result_t ist;
+        struct {
+            ray_and_id_t ray_and_id;
+        } shader;
+        struct {
+            ray_and_id_t ray_and_id;
+            uint64_t left_node_ptr;
+            bool left_hit;
+            bool right_hit;
+            bool left_first;
+        } bbox;
+        struct {
+            ray_and_id_t ray_and_id;
+            bool intersected;
+            float u;
+            float v;
+        } ist;
     };
 };
 
 struct bbox_req_t {
     ray_and_id_t ray_and_id;
-    int left_node_idx;
     float left_bbox[6];
     float right_bbox[6];
+    uint64_t left_node_ptr;
 };
 
 struct ist_ctrl_req_t {
     ray_and_id_t ray_and_id;
     int num_trigs;
-    int first_trig_idx;
+    uint64_t trig_ptr;
     bool intersected;
     float u;
     float v;
@@ -83,26 +86,22 @@ struct ist_ctrl_req_t {
 struct ist_req_t {
     ray_and_id_t ray_and_id;
     int num_trigs;
-    int first_trig_idx;
+    uint64_t trig_ptr;
     bool intersected;
     float u;
     float v;
     trig_t trig;
 };
 
-struct mem_req_t {
-    enum { BBOX, NODE, TRIG_IDX, TRIG } type;
-    int idx;
+struct dram_req_t {
+    enum { LP_BBOX, HP_BBOX, NODE, TRIG } type;
+    uint64_t addr;
 };
 
-struct mem_resp_t {
+struct dram_resp_t {
     union {
-        struct {
-            bool low_precision;
-            float bounds[6];
-        } bbox;
-        int node[2];
-        int trig_idx;
+        bbox_t bbox;
+        node_t node;
         trig_t trig;
     };
 };

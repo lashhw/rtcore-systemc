@@ -21,7 +21,7 @@ SC_MODULE(ist) {
                 ist_ctrl_req[i] = {
                     .ray_and_id = ist_req[i].ray_and_id,
                     .num_trigs = ist_req[i].num_trigs - 1,
-                    .first_trig_idx = ist_req[i].first_trig_idx + 1,
+                    .trig_ptr = ist_req[i].trig_ptr + 36,
                     .intersected = ist_req[i].intersected,
                     .u = ist_req[i].u,
                     .v = ist_req[i].v
