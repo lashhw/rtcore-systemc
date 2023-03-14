@@ -32,6 +32,14 @@ SC_MODULE(shader) {
         while (true) {
             wait(cycle);
             result_t result = p_rtcore_result->read();
+            std::cout << "  [result] " << result.intersected;
+            if (result.intersected)
+                std::cout << " " << result.t << " " << result.u << " " << result.v;
+            std::cout << std::endl;
+            std::cout << "  [answer] " << answer[result.id].intersected;
+            if (answer[result.id].intersected)
+                std::cout << " " << answer[result.id].t << " " << answer[result.id].u << " " << answer[result.id].v;
+            std::cout << std::endl;
             if (result.intersected) {
                 sc_assert(answer[result.id].intersected);
                 sc_assert(result.t == answer[result.id].t);
