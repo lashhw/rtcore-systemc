@@ -81,9 +81,9 @@ SC_MODULE(rtcore) {
         p_shader_result(f_trv_ctrl_to_shader);
 
         // link arbiter
-        m_arbiter.p_master_req(b_arbiter_to_dram);
-        m_arbiter.p_slave_req[0](b_bbox_ctrl_to_arbiter);
-        m_arbiter.p_slave_req[1](b_ist_ctrl_to_arbiter);
+        m_arbiter.p_master(b_arbiter_to_dram);
+        m_arbiter.p_slave[0](b_bbox_ctrl_to_arbiter);
+        m_arbiter.p_slave[1](b_ist_ctrl_to_arbiter);
 
         // link fork
         m_fork.p_slave(b_dram_to_fork);
