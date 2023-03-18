@@ -22,9 +22,10 @@ struct bbox_t {
 };
 
 struct node_t {
-    bool lp[2];
+    bool left_lp;
+    bool right_lp;
     int num_trigs;
-    uint64_t ptr;
+    uint64_t addr;
 };
 
 struct trig_t {
@@ -40,8 +41,9 @@ struct ray_and_id_t {
 
 struct bbox_ctrl_req_t {
     ray_and_id_t ray_and_id;
-    bool lp[2];
-    uint64_t left_bbox_ptr;
+    bool left_lp;
+    bool right_lp;
+    uint64_t left_bbox_addr;
 };
 
 
@@ -53,7 +55,8 @@ struct trv_ctrl_req_t {
         } shader;
         struct {
             ray_and_id_t ray_and_id;
-            uint64_t left_node_ptr;
+            node_t left_node;
+            node_t right_node;
             bool left_hit;
             bool right_hit;
             bool left_first;
@@ -69,15 +72,16 @@ struct trv_ctrl_req_t {
 
 struct bbox_req_t {
     ray_and_id_t ray_and_id;
-    float left_bbox[6];
-    float right_bbox[6];
-    uint64_t left_node_ptr;
+    bbox_t left_bbox;
+    bbox_t right_bbox;
+    node_t left_node;
+    node_t right_node;
 };
 
 struct ist_ctrl_req_t {
     ray_and_id_t ray_and_id;
     int num_trigs;
-    uint64_t trig_ptr;
+    uint64_t trig_addr;
     bool intersected;
     float u;
     float v;
@@ -86,19 +90,18 @@ struct ist_ctrl_req_t {
 struct ist_req_t {
     ray_and_id_t ray_and_id;
     int num_trigs;
-    uint64_t trig_ptr;
+    uint64_t trig_addr;
     bool intersected;
     float u;
     float v;
     trig_t trig;
 };
 
-struct dram_req_t {
-    enum { LP_BBOX, HP_BBOX, NODE, TRIG } type;
-    uint64_t addr;
+enum class dram_type_t {
+    BBOX, NODE, TRIG
 };
 
-struct dram_resp_t {
+struct dram_data_t {
     union {
         bbox_t bbox;
         node_t node;

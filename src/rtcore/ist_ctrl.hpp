@@ -5,14 +5,15 @@
 #include "ist.hpp"
 
 SC_MODULE(ist_ctrl) {
-    blocking_out<dram_req_t> p_dram_req;
-    blocking_in<dram_resp_t> p_dram_resp;
+    blocking_out<uint64_t> p_dram_req;
+    blocking_in<uint64_t> p_dram_resp;
     blocking_in<ist_ctrl_req_t> p_trv_ctrl_in;
     blocking_out<trv_ctrl_req_t> p_trv_ctrl_out;
     blocking_out<ist_req_t> p_ist_out;
     blocking_in<ist_ctrl_req_t> p_ist_in;
+    sc_port<dram_direct_if> p_dram_direct;
 
-    arbiter<ist_ctrl_req_t, void, 2> m_arbiter;
+    arbiter<ist_ctrl_req_t, 2> m_arbiter;
 
     blocking<ist_ctrl_req_t> b_arbiter_to_thread_1;
 
@@ -45,22 +46,14 @@ SC_MODULE(ist_ctrl) {
                 };
                 p_trv_ctrl_out->write(trv_ctrl_req);
             } else {
-                dram_req_t dram_req = {
-                    .type = dram_req_t::TRIG,
-                    .addr = ist_ctrl_req.trig_ptr
-                };
-                p_dram_req->write(dram_req);
-
-                wait(cycle);
-                dram_resp_t dram_resp = p_dram_resp->read();
                 ist_req_t ist_req = {
                     .ray_and_id = ist_ctrl_req.ray_and_id,
                     .num_trigs = ist_ctrl_req.num_trigs,
-                    .trig_ptr = ist_ctrl_req.trig_ptr,
+                    .trig_addr = ist_ctrl_req.trig_addr,
                     .intersected = ist_ctrl_req.intersected,
                     .u = ist_ctrl_req.u,
                     .v = ist_ctrl_req.v,
-                    .trig = dram_resp.trig
+                    .trig = p_dram_direct->direct_get_data(dram_type_t::TRIG, ist_ctrl_req.trig_addr).trig
                 };
                 p_ist_out->write(ist_req);
             }

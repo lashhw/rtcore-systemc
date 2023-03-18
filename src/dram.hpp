@@ -13,9 +13,15 @@
 #include "blocking.hpp"
 #include "utility.hpp"
 
-SC_MODULE(dram) {
-    blocking_in<dram_req_t> p_rtcore_req;
-    blocking_out<dram_resp_t> p_rtcore_resp;
+struct dram_direct_if : virtual public sc_interface {
+    virtual dram_data_t direct_get_data(dram_type_t type, uint64_t addr) = 0;
+    virtual void direct_traverse(const ray_t &ray, bool &intersected, float &t, float &u, float &v) = 0;
+};
+
+struct dram : public sc_module,
+              public dram_direct_if {
+    blocking_in<uint64_t> p_rtcore_req;
+    blocking_out<uint64_t> p_rtcore_resp;
 
     std::unordered_map<uint64_t, void*> addr_map;  // address -> pointer to actual data
     std::vector<bbox_t> bboxes;
@@ -95,8 +101,8 @@ SC_MODULE(dram) {
             if (node.num_trigs == 0) {
                 int left_child_idx = int(bvh.nodes[idx].first_child_or_primitive);
                 int right_child_idx = left_child_idx + 1;
-                node.lp[0] = low_precision[left_child_idx];
-                node.lp[1] = low_precision[right_child_idx];
+                node.left_lp = low_precision[left_child_idx];
+                node.right_lp = low_precision[right_child_idx];
             }
             node.num_trigs = int(bvh.nodes[idx].primitive_count);
             nodes.push_back(node);
@@ -128,10 +134,10 @@ SC_MODULE(dram) {
         for (int i = 0; i < trigs.size(); i++)
             addr_map[trig_addr_map[i]] = &trigs[i];
 
-        // fill in ptr
+        // fill in addr
         for (int i = 0; i < nodes.size(); i++) {
             int idx = int(bvh.nodes[i].first_child_or_primitive);
-            nodes[i].ptr = nodes[i].num_trigs == 0 ? bbox_addr_map[idx] : trig_addr_map[idx];
+            nodes[i].addr = nodes[i].num_trigs == 0 ? bbox_addr_map[idx] : trig_addr_map[idx];
         }
 
         SC_THREAD(thread_1);
@@ -140,31 +146,33 @@ SC_MODULE(dram) {
     void thread_1() {
         while (true) {
             wait(cycle);
-            dram_req_t req = p_rtcore_req->read();
-
+            uint64_t req = p_rtcore_req->read();
             wait(dram_latency * cycle);
-            dram_resp_t resp = {};
-            sc_assert(addr_map.count(req.addr) > 0);
-            switch (req.type) {
-                case dram_req_t::LP_BBOX:
-                case dram_req_t::HP_BBOX: {
-                    resp.bbox = *(bbox_t*)addr_map[req.addr];
-                    break;
-                }
-                case dram_req_t::NODE: {
-                    resp.node = *(node_t*)addr_map[req.addr];
-                    break;
-                }
-                case dram_req_t::TRIG: {
-                    resp.trig = *(trig_t*)addr_map[req.addr];
-                    break;
-                }
-            }
-            p_rtcore_resp->write(resp);
+            p_rtcore_resp->write(req);
         }
     }
 
-    void direct_traverse(const ray_t &ray, bool &intersected, float &t, float &u, float &v) {
+    dram_data_t direct_get_data(dram_type_t type, uint64_t addr) override {
+        dram_data_t data = {};
+        sc_assert(addr_map.count(addr) > 0);
+        switch (type) {
+            case dram_type_t::BBOX: {
+                data.bbox = *(bbox_t*)addr_map[addr];
+                break;
+            }
+            case dram_type_t::NODE: {
+                data.node = *(node_t*)addr_map[addr];
+                break;
+            }
+            case dram_type_t::TRIG: {
+                data.trig = *(trig_t*)addr_map[addr];
+                break;
+            }
+        }
+        return data;
+    }
+
+    void direct_traverse(const ray_t &ray, bool &intersected, float &t, float &u, float &v) override {
         auto result = traverser->traverse(to_bvh_ray(ray), *primitive_intersector);
         if (result) {
             intersected = true;

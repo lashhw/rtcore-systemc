@@ -8,7 +8,7 @@ using namespace sc_core;
 int sc_main(int, char **) {
     // module instantiation
     dram m_dram("m_dram", "kitchen.ply");
-    shader m_shader("m_shader", "ray_queries.bin", m_dram);
+    shader m_shader("m_shader", "ray_queries.bin");
     rtcore m_rtcore("m_rtcore");
 
     // link dram
@@ -19,6 +19,10 @@ int sc_main(int, char **) {
     m_shader.p_rtcore_ray(m_rtcore.p_shader_ray);
     m_shader.p_rtcore_id(m_rtcore.p_shader_id);
     m_shader.p_rtcore_result(m_rtcore.p_shader_result);
+    m_shader.p_dram_direct(m_dram);
+
+    // link rtcore
+    m_rtcore.p_dram_direct(m_dram);
 
     sc_start();
 
