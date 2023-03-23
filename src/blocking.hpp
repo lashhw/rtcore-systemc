@@ -37,6 +37,13 @@ public:
         m_data_written = false;
     }
 
+    ~blocking() override {
+        if (m_data_read)
+            std::cerr << "unfinished read: " << name() << std::endl;
+        if (m_data_written)
+            std::cerr << "unfinished write: " << name() << std::endl;
+    }
+
     const sc_event &data_written_event() const override {
         return m_data_written_event;
     }
