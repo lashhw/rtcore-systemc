@@ -10,7 +10,7 @@
 #include "fork.hpp"
 
 SC_MODULE(rtcore) {
-    sc_export<sync_fifo<uint64_t, fifo_size>> p_dram_req;
+    sc_export<blocking<uint64_t>> p_dram_req;
     sc_export<blocking<uint64_t>> p_dram_resp;
     sc_export<blocking<ray_t>> p_shader_ray;
     sc_export<blocking<int>> p_shader_id;
@@ -26,6 +26,7 @@ SC_MODULE(rtcore) {
     ist_ctrl m_ist_ctrl;
     ist m_ist;
 
+    blocking<uint64_t> b_arbiter_to_dram;
     blocking<uint64_t> b_dram_to_fork;
     blocking<uint64_t> b_fork_to_bbox_ctrl;
     blocking<uint64_t> b_fork_to_ist_ctrl;
@@ -35,7 +36,6 @@ SC_MODULE(rtcore) {
     sync_fifo<uint64_t, fifo_size> f_bbox_ctrl_to_dram;
     sync_fifo<uint64_t, fifo_size> f_bbox_ctrl_to_arbiter;
     sync_fifo<uint64_t, fifo_size> f_ist_ctrl_to_arbiter;
-    sync_fifo<uint64_t, fifo_size> f_arbiter_to_dram;
     sync_fifo<bbox_ctrl_req_t, fifo_size> f_trv_ctrl_to_bbox_ctrl;
     sync_fifo<bbox_req_t, fifo_size, num_lp, 1> f_bbox_ctrl_to_lp;
     sync_fifo<trv_ctrl_req_t, fifo_size, 1, num_lp> f_lp_to_trv_ctrl;
@@ -56,6 +56,7 @@ SC_MODULE(rtcore) {
                                        m_hp("m_hp"),
                                        m_ist_ctrl("m_ist_ctrl"),
                                        m_ist("m_ist"),
+                                       b_arbiter_to_dram("b_arbiter_to_dram"),
                                        b_dram_to_fork("b_dram_to_fork"),
                                        b_fork_to_bbox_ctrl("b_fork_to_bbox_ctrl"),
                                        b_fork_to_ist_ctrl("b_fork_to_ist_ctrl"),
@@ -64,7 +65,6 @@ SC_MODULE(rtcore) {
                                        f_bbox_ctrl_to_dram("f_bbox_ctrl_to_dram"),
                                        f_bbox_ctrl_to_arbiter("f_bbox_ctrl_to_arbiter"),
                                        f_ist_ctrl_to_arbiter("f_ist_ctrl_to_arbiter"),
-                                       f_arbiter_to_dram("f_arbiter_to_dram"),
                                        f_trv_ctrl_to_bbox_ctrl("f_trv_ctrl_to_bbox_ctrl"),
                                        f_bbox_ctrl_to_lp("f_bbox_ctrl_to_lp"),
                                        f_lp_to_trv_ctrl("f_lp_to_trv_ctrl"),
@@ -76,14 +76,14 @@ SC_MODULE(rtcore) {
                                        f_ist_to_ist_ctrl("f_ist_to_ist_ctrl"),
                                        f_ist_ctrl_to_trv_ctrl("f_ist_ctrl_to_trv_ctrl") {
         // link export
-        p_dram_req(f_arbiter_to_dram);
+        p_dram_req(b_arbiter_to_dram);
         p_dram_resp(b_dram_to_fork);
         p_shader_ray(b_shader_to_trv_ctrl);
         p_shader_id(b_trv_ctrl_to_shader);
         p_shader_result(f_trv_ctrl_to_shader);
 
         // link arbiter
-        m_arbiter.p_master(f_arbiter_to_dram);
+        m_arbiter.p_master(b_arbiter_to_dram);
         m_arbiter.p_slave[0](f_bbox_ctrl_to_arbiter);
         m_arbiter.p_slave[1](f_ist_ctrl_to_arbiter);
 
