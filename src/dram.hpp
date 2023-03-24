@@ -1,7 +1,6 @@
 #ifndef RTCORE_SYSTEMC_DRAM_HPP
 #define RTCORE_SYSTEMC_DRAM_HPP
 
-#include <unordered_map>
 #include <bvh/triangle.hpp>
 #include <bvh/sweep_sah_builder.hpp>
 #include <bvh/single_ray_traverser.hpp>
@@ -34,7 +33,7 @@ struct dram : public sc_module,
     std::shared_ptr<bvh::SingleRayTraverser<bvh::Bvh<float>>> traverser;
     std::shared_ptr<bvh::ClosestPrimitiveIntersector<bvh::Bvh<float>, bvh::Triangle<float>, true>> primitive_intersector;
 
-    std::unordered_multimap<uint64_t, int> remaining_cycles;
+    std::vector<std::pair<uint64_t, int>> remaining_cycles;
 
     SC_HAS_PROCESS(dram);
     dram(const sc_module_name &mn, const char *model_ply_path) : sc_module(mn) {
@@ -152,16 +151,17 @@ struct dram : public sc_module,
             ADVANCE_TO_NEGEDGE();
             if (p_rtcore_req->nb_readable()) {
                 uint64_t req = p_rtcore_req->read();
-                remaining_cycles.emplace(req, dram_latency);
+                remaining_cycles.emplace_back(req, dram_latency);
             }
             for (auto &remaining_cycle : remaining_cycles)
                 remaining_cycle.second--;
 
             // posedge: send response
             ADVANCE_TO_POSEDGE();
-            for (auto &remaining_cycle : remaining_cycles) {
-                if (remaining_cycle.second == 0) {
-                    SHOULD_NOT_BE_BLOCKED(p_rtcore_resp->write(remaining_cycle.first));
+            for (auto it = remaining_cycles.begin(); it != remaining_cycles.end(); it++) {
+                if (it->second <= 0) {
+                    SHOULD_NOT_BE_BLOCKED(p_rtcore_resp->write(it->first));
+                    remaining_cycles.erase(it);
                     break;
                 }
             }
