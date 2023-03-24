@@ -51,6 +51,8 @@ public:
     }
 
     ~sync_fifo() override {
+        if (size > 0)
+            std::cerr << name() << " still contains data" << std::endl;
         update_state(UTILIZE);
         std::cout << name() << ": UTILIZE " << utilize_duration << std::endl;
         std::cout << name() << ": STARVE " << starve_duration << std::endl;
