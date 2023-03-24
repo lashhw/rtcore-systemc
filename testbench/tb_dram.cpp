@@ -27,7 +27,7 @@ SC_MODULE(cpu) {
     void thread_2() {
         while (true) {
             wait(half_cycle);
-            if (p_dram_resp->data_written()) {
+            if (p_dram_resp->nb_readable()) {
                 uint64_t addr = p_dram_resp->read();
                 std::cout << name() << " @ " << sc_time_stamp() << ": response " << addr << " received" << std::endl;
             }

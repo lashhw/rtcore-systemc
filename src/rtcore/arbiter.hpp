@@ -23,7 +23,7 @@ struct arbiter : public sc_module {
             wait(cycle);
             bool has_data_written = false;
             for (int i = 0; i < num_slaves; i++) {
-                if (p_slave[i]->data_written()) {
+                if (p_slave[i]->nb_readable()) {
                     has_data_written = true;
                     break;
                 }
@@ -33,7 +33,7 @@ struct arbiter : public sc_module {
 
             wait(half_cycle);
             int chosen = first;
-            for (; !p_slave[chosen]->data_written(); chosen = (chosen + 1) % num_slaves);
+            for (; !p_slave[chosen]->nb_readable(); chosen = (chosen + 1) % num_slaves);
             wait(half_cycle);
             T req = p_slave[chosen]->read();
             p_master->write(req);

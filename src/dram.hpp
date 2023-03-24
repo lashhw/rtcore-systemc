@@ -150,7 +150,7 @@ struct dram : public sc_module,
         while (true) {
             // negedge: read request & update counter
             ADVANCE_TO_NEGEDGE();
-            if (p_rtcore_req->data_written()) {
+            if (p_rtcore_req->nb_readable()) {
                 uint64_t req = p_rtcore_req->read();
                 remaining_cycles.emplace(req, dram_latency);
             }

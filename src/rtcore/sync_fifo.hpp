@@ -65,7 +65,7 @@ public:
         return write_updated;
     }
 
-    bool data_written() const override {
+    bool nb_readable() const override {
         return num_elements() > 0;
     }
 

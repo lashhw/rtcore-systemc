@@ -30,7 +30,7 @@ SC_MODULE(bbox_ctrl) {
     void thread_1() {
         while (true) {
             wait(half_cycle);
-            if (p_dram_resp->data_written()) {
+            if (p_dram_resp->nb_readable()) {
                 uint64_t addr = p_dram_resp->read();
                 wait(half_cycle);
                 bool found = false;
@@ -48,7 +48,7 @@ SC_MODULE(bbox_ctrl) {
                     }
                 }
                 sc_assert(found);
-            } else if (p_trv_ctrl->data_written() && !free_fifo.empty()) {
+            } else if (p_trv_ctrl->nb_readable() && !free_fifo.empty()) {
                 bbox_ctrl_req_t req = p_trv_ctrl->read();
                 wait(half_cycle);
                 bbox_req_t bbox_req = {
