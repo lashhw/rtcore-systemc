@@ -9,6 +9,8 @@ public:
     virtual bool data_written() const = 0;
     virtual void read(T &) = 0;
     virtual T read() = 0;
+    virtual void peek(T &) = 0;
+    virtual T peek() = 0;
 };
 
 // blocking write interface
@@ -66,6 +68,18 @@ public:
     T read() override {
         T tmp;
         read(tmp);
+        return tmp;
+    }
+
+    void peek(T &val) override {
+        if (!m_data_written)
+            wait(m_data_written_event);
+        val = data;
+    }
+
+    T peek() override {
+        T tmp;
+        peek(tmp);
         return tmp;
     }
 

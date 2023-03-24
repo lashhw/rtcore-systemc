@@ -16,7 +16,9 @@ public:
 template <typename T, int num_write>
 class sync_fifo_out_if : public blocking_out_if<T> {
 public:
+    using blocking_out_if<T>::write;
     virtual void write(const T *) = 0;
+    virtual bool nb_writable() = 0;
 };
 
 // alias for sc_port<sync_fifo_in_if<T, num_read>>
@@ -97,6 +99,15 @@ public:
         return tmp;
     }
 
+    void peek(T &val) override {
+        SC_REPORT_FATAL(name(), "peek() has not implemented");
+    }
+
+    T peek() override {
+        SC_REPORT_FATAL(name(), "peek() has not implemented");
+        return T();
+    }
+
     // blocking write
     void write(const T *val) override {
         if (max_size - size < num_write) {
@@ -115,6 +126,11 @@ public:
     void write(const T &val) override {
         sc_assert(num_write == 1);
         write(&val);
+    }
+
+    // this fifo can be written without blocking
+    bool nb_writable() override {
+        return max_size - size >= num_write;
     }
 
     // direct write

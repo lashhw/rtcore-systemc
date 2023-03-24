@@ -26,6 +26,7 @@ SC_MODULE(ist_ctrl) {
         m_arbiter.p_master(b_arbiter_to_thread_1);
 
         SC_THREAD(thread_1);
+        SC_THREAD(thread_2);
     }
 
     void thread_1() {
@@ -57,6 +58,12 @@ SC_MODULE(ist_ctrl) {
                 };
                 p_ist_out->write(ist_req);
             }
+        }
+    }
+
+    void thread_2() {
+        while (true) {
+            p_dram_resp->read();
         }
     }
 };

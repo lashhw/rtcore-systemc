@@ -12,9 +12,10 @@ SC_MODULE(fork) {
 
     void thread_1() {
         while (true) {
-            T data = p_slave->read();
+            T data = p_slave->peek();
             for (int i = 0; i < num_masters; i++)
                 p_master[i]->write(data);
+            p_slave->read();
         }
     }
 };

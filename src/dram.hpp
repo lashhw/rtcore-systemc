@@ -7,6 +7,7 @@
 #include <bvh/single_ray_traverser.hpp>
 #include <bvh/primitive_intersectors.hpp>
 #include "third_party/happly/happly.h"
+#include "rtcore/sync_fifo.hpp"
 #include "mark.hpp"
 #include "params.hpp"
 #include "payload_t.hpp"
@@ -32,6 +33,8 @@ struct dram : public sc_module,
     std::vector<bvh::Triangle<float>> bvh_triangles;
     std::shared_ptr<bvh::SingleRayTraverser<bvh::Bvh<float>>> traverser;
     std::shared_ptr<bvh::ClosestPrimitiveIntersector<bvh::Bvh<float>, bvh::Triangle<float>, true>> primitive_intersector;
+
+    std::unordered_multimap<uint64_t, int> remaining_cycles;
 
     SC_HAS_PROCESS(dram);
     dram(const sc_module_name &mn, const char *model_ply_path) : sc_module(mn) {
@@ -145,10 +148,23 @@ struct dram : public sc_module,
 
     void thread_1() {
         while (true) {
-            wait(cycle);
-            uint64_t req = p_rtcore_req->read();
-            wait(dram_latency * cycle);
-            p_rtcore_resp->write(req);
+            // negedge: read request & update counter
+            ADVANCE_TO_NEGEDGE();
+            if (p_rtcore_req->data_written()) {
+                uint64_t req = p_rtcore_req->read();
+                remaining_cycles.emplace(req, dram_latency);
+            }
+            for (auto &remaining_cycle : remaining_cycles)
+                remaining_cycle.second--;
+
+            // posedge: send response
+            ADVANCE_TO_POSEDGE();
+            for (auto &remaining_cycle : remaining_cycles) {
+                if (remaining_cycle.second == 0) {
+                    SHOULD_NOT_BE_BLOCKED(p_rtcore_resp->write(remaining_cycle.first));
+                    break;
+                }
+            }
         }
     }
 
