@@ -7,9 +7,7 @@ class blocking_in_if : virtual public sc_interface {
 public:
     virtual const sc_event &data_written_event() const = 0;
     virtual bool nb_readable() const = 0;
-    virtual void read(T &) = 0;
     virtual T read() = 0;
-    virtual void peek(T &) = 0;
     virtual T peek() = 0;
 };
 
@@ -54,7 +52,7 @@ public:
         return m_data_written;
     }
 
-    void read(T &val) override {
+    T read() override {
         m_data_read_event.notify();
         if (m_data_written) {
             m_data_written = false;
@@ -62,25 +60,13 @@ public:
             m_data_read = true;
             wait(m_data_written_event);
         }
-        val = data;
-    }
-
-    T read() override {
-        T tmp;
-        read(tmp);
-        return tmp;
-    }
-
-    void peek(T &val) override {
-        if (!m_data_written)
-            wait(m_data_written_event);
-        val = data;
+        return data;
     }
 
     T peek() override {
-        T tmp;
-        peek(tmp);
-        return tmp;
+        if (!m_data_written)
+            wait(m_data_written_event);
+        return data;
     }
 
     void write(const T &val) override {

@@ -88,19 +88,11 @@ public:
     }
 
     // this method should only be used when num_read = 1
-    void read(T &val) override {
-        sc_assert(num_read == 1);
-        read(&val);
-    }
-
     T read() override {
+        sc_assert(num_read == 1);
         T tmp;
-        read(tmp);
+        read(&tmp);
         return tmp;
-    }
-
-    void peek(T &val) override {
-        SC_REPORT_FATAL(name(), "peek() has not implemented");
     }
 
     T peek() override {
