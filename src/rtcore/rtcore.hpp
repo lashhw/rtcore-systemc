@@ -33,7 +33,6 @@ SC_MODULE(rtcore) {
     blocking<ray_t> b_shader_to_trv_ctrl;
     blocking<int> b_trv_ctrl_to_shader;
 
-    sync_fifo<uint64_t, fifo_size> f_bbox_ctrl_to_dram;
     sync_fifo<uint64_t, fifo_size> f_bbox_ctrl_to_arbiter;
     sync_fifo<uint64_t, fifo_size> f_ist_ctrl_to_arbiter;
     sync_fifo<bbox_ctrl_req_t, fifo_size> f_trv_ctrl_to_bbox_ctrl;
@@ -62,7 +61,6 @@ SC_MODULE(rtcore) {
                                        b_fork_to_ist_ctrl("b_fork_to_ist_ctrl"),
                                        b_shader_to_trv_ctrl("b_shader_to_trv_ctrl"),
                                        b_trv_ctrl_to_shader("b_trv_ctrl_to_shader"),
-                                       f_bbox_ctrl_to_dram("f_bbox_ctrl_to_dram"),
                                        f_bbox_ctrl_to_arbiter("f_bbox_ctrl_to_arbiter"),
                                        f_ist_ctrl_to_arbiter("f_ist_ctrl_to_arbiter"),
                                        f_trv_ctrl_to_bbox_ctrl("f_trv_ctrl_to_bbox_ctrl"),
