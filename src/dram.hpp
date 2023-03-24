@@ -1,6 +1,7 @@
 #ifndef RTCORE_SYSTEMC_DRAM_HPP
 #define RTCORE_SYSTEMC_DRAM_HPP
 
+#include <unordered_map>
 #include <bvh/triangle.hpp>
 #include <bvh/sweep_sah_builder.hpp>
 #include <bvh/single_ray_traverser.hpp>
