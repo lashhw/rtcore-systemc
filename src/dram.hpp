@@ -22,7 +22,7 @@ struct dram_direct_if : virtual public sc_interface {
 
 struct dram : public sc_module,
               public dram_direct_if {
-    blocking_in<uint64_t> p_rtcore_req;
+    blocking_in<dram_req_t> p_rtcore_req;
     nonblocking_out<uint64_t> p_rtcore_resp_1;
     nonblocking_out<uint64_t> p_rtcore_resp_2;
 
@@ -153,8 +153,8 @@ struct dram : public sc_module,
             // read: read request
             advance_to_read();
             if (p_rtcore_req->nb_readable()) {
-                uint64_t req = p_rtcore_req->read();
-                remaining_cycles.emplace_back(req, dram_latency);
+                dram_req_t req = p_rtcore_req->read();
+                remaining_cycles.emplace_back(req.addr, req.num_bytes * dram_latency_per_byte);
             }
 
             // update: update counter

@@ -97,6 +97,11 @@ struct ist_req_t {
     trig_t trig;
 };
 
+struct dram_req_t {
+    uint64_t addr;
+    int num_bytes;
+};
+
 enum class dram_type_t {
     BBOX, NODE, TRIG
 };

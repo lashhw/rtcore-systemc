@@ -2,7 +2,7 @@
 #define RTCORE_SYSTEMC_BBOX_CTRL_HPP
 
 SC_MODULE(bbox_ctrl) {
-    sync_fifo_out<uint64_t> p_dram_req;
+    sync_fifo_out<dram_req_t> p_dram_req;
     nonblocking_in<uint64_t> p_dram_resp;
     blocking_in<bbox_ctrl_req_t> p_trv_ctrl;
     sync_fifo_out<bbox_req_t> p_lp;
@@ -78,7 +78,11 @@ SC_MODULE(bbox_ctrl) {
                     }
                 }
                 if (pending_idx != -1 && p_dram_req->nb_writable()) {
-                    p_dram_req->write(rb_entry[pending_idx].addr);
+                    dram_req_t req = {
+                        .addr = rb_entry[pending_idx].addr,
+                        .num_bytes = rb_entry[pending_idx].num_bytes
+                    };
+                    p_dram_req->write(req);
                     rb_entry[pending_idx].pending = false;
                     continue;
                 }

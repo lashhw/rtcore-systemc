@@ -5,7 +5,7 @@
 #include "ist.hpp"
 
 SC_MODULE(ist_ctrl) {
-    blocking_out<uint64_t> p_dram_req;
+    blocking_out<dram_req_t> p_dram_req;
     nonblocking_in<uint64_t> p_dram_resp;
     blocking_in<ist_ctrl_req_t> p_trv_ctrl_in;
     blocking_out<trv_ctrl_req_t> p_trv_ctrl_out;

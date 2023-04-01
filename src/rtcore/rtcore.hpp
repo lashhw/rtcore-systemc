@@ -9,7 +9,7 @@
 #include "ist_ctrl.hpp"
 
 SC_MODULE(rtcore) {
-    sc_export<blocking<uint64_t>> p_dram_req;
+    sc_export<blocking<dram_req_t>> p_dram_req;
     sc_export<nonblocking<uint64_t>> p_dram_resp_1;
     sc_export<nonblocking<uint64_t>> p_dram_resp_2;
     sc_export<blocking<ray_t>> p_shader_ray;
@@ -17,7 +17,7 @@ SC_MODULE(rtcore) {
     sc_export<sync_fifo<result_t, fifo_size>> p_shader_result;
     sc_port<dram_direct_if> p_dram_direct;
 
-    arbiter<uint64_t, 2> m_arbiter;
+    arbiter<dram_req_t, 2> m_arbiter;
     trv_ctrl m_trv_ctrl;
     bbox_ctrl m_bbox_ctrl;
     lp m_lp;
@@ -25,15 +25,15 @@ SC_MODULE(rtcore) {
     ist_ctrl m_ist_ctrl;
     ist m_ist;
 
-    blocking<uint64_t> b_arbiter_to_dram;
+    blocking<dram_req_t> b_arbiter_to_dram;
     blocking<ray_t> b_shader_to_trv_ctrl;
     blocking<int> b_trv_ctrl_to_shader;
 
     nonblocking<uint64_t> n_dram_to_bbox_ctrl;
     nonblocking<uint64_t> n_dram_to_ist_ctrl;
 
-    sync_fifo<uint64_t, fifo_size> f_bbox_ctrl_to_arbiter;
-    sync_fifo<uint64_t, fifo_size> f_ist_ctrl_to_arbiter;
+    sync_fifo<dram_req_t, fifo_size> f_bbox_ctrl_to_arbiter;
+    sync_fifo<dram_req_t, fifo_size> f_ist_ctrl_to_arbiter;
     sync_fifo<bbox_ctrl_req_t, fifo_size> f_trv_ctrl_to_bbox_ctrl;
     sync_fifo<bbox_req_t, fifo_size, num_lp, 1> f_bbox_ctrl_to_lp;
     sync_fifo<trv_ctrl_req_t, fifo_size, 1, num_lp> f_lp_to_trv_ctrl;
