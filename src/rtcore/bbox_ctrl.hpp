@@ -14,10 +14,8 @@ SC_MODULE(bbox_ctrl) {
     }
 
     void thread_1() {
-        struct {
-            bool valid;
-            bool pending;
-            bool ready;
+        struct rb_entry_t {
+            enum { EMPTY, PENDING, WAITING, READY } status;
             uint64_t addr;
             int num_bytes;
             bool lp;
@@ -25,29 +23,29 @@ SC_MODULE(bbox_ctrl) {
         } rb_entry[rb_size];
         std::queue<int> free_fifo;
         for (int i = 0; i < rb_size; i++) {
-            rb_entry[i].valid = false;
+            rb_entry[i].status = rb_entry_t::EMPTY;
             free_fifo.push(i);
         }
 
         while (true) {
             advance_to_read();
-            // process dram resp
+            // process WAITING
             if (p_dram_resp->readable()) {
                 uint64_t addr = p_dram_resp->read();
                 int addr_idx = -1;
                 for (int i = 0; i < rb_size; i++) {
-                    if (rb_entry[i].valid && addr == rb_entry[i].addr) {
+                    if (rb_entry[i].status == rb_entry_t::WAITING && addr == rb_entry[i].addr) {
                         addr_idx = i;
                         break;
                     }
                 }
                 if (addr_idx != -1) {
                     delay(1);
-                    rb_entry[addr_idx].ready = true;
+                    rb_entry[addr_idx].status = rb_entry_t::READY;
                     continue;
                 }
             }
-            // process req from trv_ctrl
+            // process EMPTY
             if (p_trv_ctrl->readable() && !free_fifo.empty()) {
                 bbox_ctrl_req_t req = p_trv_ctrl->read();
                 delay(1);
@@ -64,9 +62,7 @@ SC_MODULE(bbox_ctrl) {
                 bbox_req.right_node = p_dram_direct->direct_get_data(dram_type_t::NODE, addr).node;
                 addr += 8;
                 rb_entry[free_fifo.front()] = {
-                    .valid = true,
-                    .pending = true,
-                    .ready = false,
+                    .status = rb_entry_t::PENDING,
                     .addr = req.left_bbox_addr,
                     .num_bytes = int(addr - req.left_bbox_addr),
                     .lp = req.left_lp && req.right_lp,
@@ -76,10 +72,10 @@ SC_MODULE(bbox_ctrl) {
                 continue;
             }
             delay(1);
-            // check pending bit
+            // process PENDING
             int pending_idx = -1;
             for (int i = 0; i < rb_size; i++) {
-                if (rb_entry[i].valid && rb_entry[i].pending) {
+                if (rb_entry[i].status == rb_entry_t::PENDING) {
                     pending_idx = i;
                     break;
                 }
@@ -90,13 +86,13 @@ SC_MODULE(bbox_ctrl) {
                     .num_bytes = rb_entry[pending_idx].num_bytes
                 };
                 p_dram_req->write(req);
-                rb_entry[pending_idx].pending = false;
+                rb_entry[pending_idx].status = rb_entry_t::WAITING;
                 continue;
             }
-            // check ready bit
+            // process READY
             int ready_idx = -1;
             for (int i = 0; i < rb_size; i++) {
-                if (rb_entry[i].valid && rb_entry[i].ready) {
+                if (rb_entry[i].status == rb_entry_t::READY) {
                     ready_idx = i;
                     break;
                 }
@@ -104,11 +100,11 @@ SC_MODULE(bbox_ctrl) {
             if (ready_idx != -1) {
                 if (rb_entry[ready_idx].lp && p_lp->writable()) {
                     p_lp->write(rb_entry[ready_idx].bbox_req);
-                    rb_entry[ready_idx].valid = false;
+                    rb_entry[ready_idx].status = rb_entry_t::EMPTY;
                     free_fifo.push(ready_idx);
                 } else if (!rb_entry[ready_idx].lp && p_hp->writable()) {
                     p_hp->write(rb_entry[ready_idx].bbox_req);
-                    rb_entry[ready_idx].valid = false;
+                    rb_entry[ready_idx].status = rb_entry_t::EMPTY;
                     free_fifo.push(ready_idx);
                 }
             }
