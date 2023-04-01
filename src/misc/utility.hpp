@@ -55,6 +55,7 @@ const char *curr_phase_str() {
         case phase_t::UPDATE:
             return "UPDATE";
     }
+    return "UNKNOWN";
 }
 
 void delay(int num_cycles) {
