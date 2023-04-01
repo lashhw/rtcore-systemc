@@ -1,8 +1,8 @@
 #ifndef RTCORE_SYSTEMC_UTILITY_HPP
 #define RTCORE_SYSTEMC_UTILITY_HPP
 
-#include <bvh/ray.hpp>
-#include <bvh/triangle.hpp>
+#include "bvh/ray.hpp"
+#include "bvh/triangle.hpp"
 #include "params.hpp"
 #include "payload_t.hpp"
 

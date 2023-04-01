@@ -1,7 +1,7 @@
 #ifndef RTCORE_SYSTEMC_BLOCKING_HPP
 #define RTCORE_SYSTEMC_BLOCKING_HPP
 
-#include "utility.hpp"
+#include "../misc/utility.hpp"
 
 // blocking read interface
 template <typename T>

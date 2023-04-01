@@ -1,7 +1,7 @@
 #include <systemc>
 using namespace sc_core;
 
-#include "../src/blocking.hpp"
+#include "../src/channel/blocking.hpp"
 
 SC_MODULE(consumer) {
     blocking_in<int> b_in;

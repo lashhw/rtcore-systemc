@@ -1,7 +1,7 @@
 #include <systemc>
 using namespace sc_core;
 
-#include "../src/rtcore/sync_fifo.hpp"
+#include "../src/channel/sync_fifo.hpp"
 #include "../src/dram.hpp"
 
 SC_MODULE(cpu) {

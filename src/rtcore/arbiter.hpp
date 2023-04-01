@@ -1,9 +1,9 @@
 #ifndef RTCORE_SYSTEMC_ARBITER_HPP
 #define RTCORE_SYSTEMC_ARBITER_HPP
 
-#include "../blocking.hpp"
-#include "../params.hpp"
-#include "../utility.hpp"
+#include "../channel/blocking.hpp"
+#include "../misc/params.hpp"
+#include "../misc/utility.hpp"
 
 template<typename T, int num_slaves>
 SC_MODULE(arbiter) {

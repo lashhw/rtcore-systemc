@@ -1,7 +1,7 @@
 #ifndef RTCORE_SYSTEMC_RTCORE_HPP
 #define RTCORE_SYSTEMC_RTCORE_HPP
 
-#include "sync_fifo.hpp"
+#include "../channel/sync_fifo.hpp"
 #include "trv_ctrl.hpp"
 #include "bbox_ctrl.hpp"
 #include "lp.hpp"

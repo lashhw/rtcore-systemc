@@ -1,8 +1,8 @@
 #include <systemc>
 using namespace sc_core;
 
-#include "../src/nonblocking.hpp"
-#include "../src/utility.hpp"
+#include "../src/channel/nonblocking.hpp"
+#include "../src/misc/utility.hpp"
 
 SC_MODULE(consumer) {
     nonblocking_in<int> n_in;

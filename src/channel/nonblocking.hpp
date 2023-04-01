@@ -1,7 +1,7 @@
 #ifndef RTCORE_SYSTEMC_NONBLOCKING_HPP
 #define RTCORE_SYSTEMC_NONBLOCKING_HPP
 
-#include "utility.hpp"
+#include "../misc/utility.hpp"
 
 template <typename T>
 class nonblocking_in_if : virtual public sc_interface {

@@ -7,13 +7,13 @@
 #include <bvh/single_ray_traverser.hpp>
 #include <bvh/primitive_intersectors.hpp>
 #include "third_party/happly/happly.h"
-#include "rtcore/sync_fifo.hpp"
-#include "mark.hpp"
-#include "params.hpp"
-#include "payload_t.hpp"
-#include "blocking.hpp"
-#include "nonblocking.hpp"
-#include "utility.hpp"
+#include "channel/sync_fifo.hpp"
+#include "misc/mark.hpp"
+#include "misc/params.hpp"
+#include "misc/payload_t.hpp"
+#include "channel/blocking.hpp"
+#include "channel/nonblocking.hpp"
+#include "misc/utility.hpp"
 
 struct dram_direct_if : virtual public sc_interface {
     virtual dram_data_t direct_get_data(dram_type_t type, uint64_t addr) = 0;

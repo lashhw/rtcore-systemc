@@ -1,7 +1,7 @@
 #ifndef RTCORE_SYSTEMC_TRV_CTRL_HPP
 #define RTCORE_SYSTEMC_TRV_CTRL_HPP
 
-#include "../payload_t.hpp"
+#include "../misc/payload_t.hpp"
 #include "arbiter.hpp"
 
 SC_MODULE(trv_ctrl) {
