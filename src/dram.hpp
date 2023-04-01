@@ -151,7 +151,7 @@ struct dram : public sc_module,
         while (true) {
             // read: read request
             advance_to_read();
-            if (p_rtcore_req->nb_readable()) {
+            if (p_rtcore_req->readable()) {
                 dram_req_t req = p_rtcore_req->read();
                 remaining_cycles.emplace_back(req.addr, req.num_bytes * dram_latency_per_byte);
             }

@@ -19,7 +19,7 @@ SC_MODULE(arbiter) {
             advance_to_read();
             int chosen = -1;
             for (int i = 0, candidate = first_priority; i < num_slaves; i++, candidate = (candidate + 1) % num_slaves) {
-                if (p_slave[candidate]->nb_readable()) {
+                if (p_slave[candidate]->readable()) {
                     chosen = candidate;
                     break;
                 }

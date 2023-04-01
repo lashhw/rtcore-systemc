@@ -27,7 +27,7 @@ SC_MODULE(cpu) {
     void thread_2() {
         while (true) {
             advance_to_read();
-            if (p_dram_resp->nb_readable()) {
+            if (p_dram_resp->readable()) {
                 uint64_t addr = p_dram_resp->read();
                 LOG << "response " << addr << " received";
             }

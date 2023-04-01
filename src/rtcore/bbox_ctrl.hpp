@@ -40,7 +40,7 @@ SC_MODULE(bbox_ctrl) {
                         break;
                     }
                 }
-            } else if (p_trv_ctrl->nb_readable() && !free_fifo.empty()) {
+            } else if (p_trv_ctrl->readable() && !free_fifo.empty()) {
                 bbox_ctrl_req_t req = p_trv_ctrl->read();
                 delay(1);
                 bbox_req_t bbox_req = {
@@ -75,7 +75,7 @@ SC_MODULE(bbox_ctrl) {
                         break;
                     }
                 }
-                if (pending_idx != -1 && p_dram_req->nb_writable()) {
+                if (pending_idx != -1 && p_dram_req->writable()) {
                     dram_req_t req = {
                         .addr = rb_entry[pending_idx].addr,
                         .num_bytes = rb_entry[pending_idx].num_bytes
@@ -93,11 +93,11 @@ SC_MODULE(bbox_ctrl) {
                     }
                 }
                 if (ready_idx != -1) {
-                    if (rb_entry[ready_idx].lp && p_lp->nb_writable()) {
+                    if (rb_entry[ready_idx].lp && p_lp->writable()) {
                         p_lp->write(rb_entry[ready_idx].bbox_req);
                         rb_entry[ready_idx].valid = false;
                         free_fifo.push(ready_idx);
-                    } else if (!rb_entry[ready_idx].lp && p_hp->nb_writable()) {
+                    } else if (!rb_entry[ready_idx].lp && p_hp->writable()) {
                         p_hp->write(rb_entry[ready_idx].bbox_req);
                         rb_entry[ready_idx].valid = false;
                         free_fifo.push(ready_idx);

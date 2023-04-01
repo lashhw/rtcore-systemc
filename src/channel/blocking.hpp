@@ -7,7 +7,7 @@
 template <typename T>
 class blocking_in_if : virtual public sc_interface {
 public:
-    virtual bool nb_readable() = 0;
+    virtual bool readable() = 0;
     virtual T read() = 0;
 };
 
@@ -45,7 +45,7 @@ public:
             SC_REPORT_WARNING("communication", ("unfinished write in " + mn).c_str());
     }
 
-    bool nb_readable() override {
+    bool readable() override {
         assert_on_read();
         return data_written;
     }

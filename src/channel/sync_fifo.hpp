@@ -15,7 +15,7 @@ public:
 template <typename T, int num_write>
 class sync_fifo_out_if : public blocking_out_if<T> {
 public:
-    virtual bool nb_writable() = 0;
+    virtual bool writable() = 0;
     using blocking_out_if<T>::write;
     virtual void write(const T *) = 0;
 };
@@ -49,7 +49,7 @@ public:
             SC_REPORT_WARNING("communication", ("fifo still contains data in " + mn).c_str());
     }
 
-    bool nb_readable() override {
+    bool readable() override {
         assert_on_read();
         return size > 0;
     }
@@ -74,7 +74,7 @@ public:
         return tmp;
     }
 
-    bool nb_writable() override {
+    bool writable() override {
         assert_on_write();
         return max_size - size >= num_write;
     }
