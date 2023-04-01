@@ -31,16 +31,24 @@ SC_MODULE(bbox_ctrl) {
 
         while (true) {
             advance_to_read();
+            // process dram resp
             if (p_dram_resp->readable()) {
                 uint64_t addr = p_dram_resp->read();
-                delay(1);
-                for (auto &entry : rb_entry) {
-                    if (entry.valid && addr == entry.addr) {
-                        entry.ready = true;
+                int addr_idx = -1;
+                for (int i = 0; i < rb_size; i++) {
+                    if (rb_entry[i].valid && addr == rb_entry[i].addr) {
+                        addr_idx = i;
                         break;
                     }
                 }
-            } else if (p_trv_ctrl->readable() && !free_fifo.empty()) {
+                if (addr_idx != -1) {
+                    delay(1);
+                    rb_entry[addr_idx].ready = true;
+                    continue;
+                }
+            }
+            // process req from trv_ctrl
+            if (p_trv_ctrl->readable() && !free_fifo.empty()) {
                 bbox_ctrl_req_t req = p_trv_ctrl->read();
                 delay(1);
                 bbox_req_t bbox_req = {
@@ -65,45 +73,45 @@ SC_MODULE(bbox_ctrl) {
                     .bbox_req = bbox_req
                 };
                 free_fifo.pop();
-            } else {
-                delay(1);
-                // check pending bit
-                int pending_idx = -1;
-                for (int i = 0; i < rb_size; i++) {
-                    if (rb_entry[i].valid && rb_entry[i].pending) {
-                        pending_idx = i;
-                        break;
-                    }
+                continue;
+            }
+            delay(1);
+            // check pending bit
+            int pending_idx = -1;
+            for (int i = 0; i < rb_size; i++) {
+                if (rb_entry[i].valid && rb_entry[i].pending) {
+                    pending_idx = i;
+                    break;
                 }
-                if (pending_idx != -1 && p_dram_req->writable()) {
-                    dram_req_t req = {
-                        .addr = rb_entry[pending_idx].addr,
-                        .num_bytes = rb_entry[pending_idx].num_bytes
-                    };
-                    p_dram_req->write(req);
-                    rb_entry[pending_idx].pending = false;
-                    continue;
+            }
+            if (pending_idx != -1 && p_dram_req->writable()) {
+                dram_req_t req = {
+                    .addr = rb_entry[pending_idx].addr,
+                    .num_bytes = rb_entry[pending_idx].num_bytes
+                };
+                p_dram_req->write(req);
+                rb_entry[pending_idx].pending = false;
+                continue;
+            }
+            // check ready bit
+            int ready_idx = -1;
+            for (int i = 0; i < rb_size; i++) {
+                if (rb_entry[i].valid && rb_entry[i].ready) {
+                    ready_idx = i;
+                    break;
                 }
-                // check ready bit
-                int ready_idx = -1;
-                for (int i = 0; i < rb_size; i++) {
-                    if (rb_entry[i].valid && rb_entry[i].ready) {
-                        ready_idx = i;
-                        break;
-                    }
+            }
+            if (ready_idx != -1) {
+                if (rb_entry[ready_idx].lp && p_lp->writable()) {
+                    p_lp->write(rb_entry[ready_idx].bbox_req);
+                    rb_entry[ready_idx].valid = false;
+                    free_fifo.push(ready_idx);
+                } else if (!rb_entry[ready_idx].lp && p_hp->writable()) {
+                    p_hp->write(rb_entry[ready_idx].bbox_req);
+                    rb_entry[ready_idx].valid = false;
+                    free_fifo.push(ready_idx);
                 }
-                if (ready_idx != -1) {
-                    if (rb_entry[ready_idx].lp && p_lp->writable()) {
-                        p_lp->write(rb_entry[ready_idx].bbox_req);
-                        rb_entry[ready_idx].valid = false;
-                        free_fifo.push(ready_idx);
-                    } else if (!rb_entry[ready_idx].lp && p_hp->writable()) {
-                        p_hp->write(rb_entry[ready_idx].bbox_req);
-                        rb_entry[ready_idx].valid = false;
-                        free_fifo.push(ready_idx);
-                    }
-                    continue;
-                }
+                continue;
             }
         }
     }
