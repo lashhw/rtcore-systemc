@@ -2,49 +2,51 @@
 using namespace sc_core;
 
 #include "../src/blocking.hpp"
-#include "../src/utility.hpp"
 
 SC_MODULE(consumer) {
-    blocking_in<int> in;
+    blocking_in<int> b_in;
+
     SC_CTOR(consumer) {
         SC_THREAD(thread);
     }
+
     void thread() {
         while (true) {
-            wait(rand()%2 * cycle);
-            std::cout << name() << " @ " << sc_time_stamp() << ": read request sent!" << std::endl;
-            int val;
-            in->read(val);
-            std::cout << name() << " @ " << sc_time_stamp() << ": (" << val << ") read!" << std::endl;
-            wait(cycle);
+            LOG << "sending read request";
+            int val = b_in->read();
+            LOG << "(" << val << ") read!";
+            delay(rand() % 2 + 1);
         }
     }
 };
 
 SC_MODULE(producer) {
-    blocking_out<int> out;
+    blocking_out<int> b_out;
+
     SC_CTOR(producer) {
         SC_THREAD(thread);
     }
+
     void thread() {
         int curr = 0;
         while (true) {
-            wait(rand()%2 * cycle);
             int val = curr++;
-            std::cout << name() << " @ " << sc_time_stamp() << ": write request (" << val << ") sent!" << std::endl;
-            out->write(val);
-            std::cout << name() << " @ " << sc_time_stamp() << ": write request (" << val << ") granted!" << std::endl;
-            wait(cycle);
+            LOG << "sending write request (" << val << ")";
+            b_out->write(val);
+            LOG << "write request (" << val << ") granted!";
+            delay(rand() % 2 + 1);
         }
     }
 };
 
 int sc_main(int, char **) {
-    blocking<int> blocking_i("blocking");
-    consumer consumer_i("consumer");
-    consumer_i.in(blocking_i);
-    producer producer_i("producer");
-    producer_i.out(blocking_i);
+    blocking<int> b_channel("b_channel");
+
+    consumer m_consumer("m_consumer");
+    producer m_producer("m_producer");
+
+    m_consumer.b_in(b_channel);
+    m_producer.b_out(b_channel);
 
     sc_start(100 * cycle);
     return 0;

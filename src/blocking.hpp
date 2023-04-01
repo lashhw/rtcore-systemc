@@ -1,14 +1,14 @@
 #ifndef RTCORE_SYSTEMC_BLOCKING_HPP
 #define RTCORE_SYSTEMC_BLOCKING_HPP
 
+#include "utility.hpp"
+
 // blocking read interface
 template <typename T>
 class blocking_in_if : virtual public sc_interface {
 public:
-    virtual const sc_event &data_written_event() const = 0;
     virtual bool nb_readable() const = 0;
     virtual T read() = 0;
-    virtual T peek() = 0;
 };
 
 // blocking write interface
@@ -33,59 +33,54 @@ class blocking : public sc_channel,
                  public blocking_out_if<T> {
 public:
     SC_CTOR(blocking) {
-        m_data_read = false;
-        m_data_written = false;
+        data_read = false;
+        data_written = false;
     }
 
     ~blocking() override {
-        if (m_data_read)
-            std::cerr << "unfinished read: " << name() << std::endl;
-        if (m_data_written)
-            std::cerr << "unfinished write: " << name() << std::endl;
-    }
-
-    const sc_event &data_written_event() const override {
-        return m_data_written_event;
+        std::string mn = name();
+        if (data_read)
+            SC_REPORT_WARNING("communication", ("unfinished read in " + mn).c_str());
+        if (data_written)
+            SC_REPORT_WARNING("communication", ("unfinished write in " + mn).c_str());
     }
 
     bool nb_readable() const override {
-        return m_data_written;
+        assert_on_read();
+        return data_written;
     }
 
     T read() override {
-        m_data_read_event.notify();
-        if (m_data_written) {
-            m_data_written = false;
+        advance_to_read();
+        data_read_event.notify();
+        if (data_written) {
+            data_written = false;
         } else {
-            m_data_read = true;
-            wait(m_data_written_event);
+            data_read = true;
+            wait(data_written_event);
+            advance_to_read();
         }
         return data;
     }
 
-    T peek() override {
-        if (!m_data_written)
-            wait(m_data_written_event);
-        return data;
-    }
-
     void write(const T &val) override {
+        advance_to_write();
         data = val;
-        m_data_written_event.notify();
-        if (m_data_read) {
-            m_data_read = false;
+        data_written_event.notify();
+        if (data_read) {
+            data_read = false;
         } else {
-            m_data_written = true;
-            wait(m_data_read_event);
+            data_written = true;
+            wait(data_read_event);
         }
     }
 
 private:
     T data;
-    bool m_data_read;
-    sc_event m_data_read_event;
-    bool m_data_written;
-    sc_event m_data_written_event;
+    bool data_read;
+    sc_event data_read_event;
+    bool data_written;
+    sc_event data_written_event;
 };
 
 #endif //RTCORE_SYSTEMC_BLOCKING_HPP

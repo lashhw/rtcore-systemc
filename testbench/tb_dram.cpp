@@ -17,21 +17,21 @@ SC_MODULE(cpu) {
     void thread_1() {
         int i = 0;
         while (true) {
-            wait(cycle);
             p_dram_req->write(i);
-            std::cout << name() << " @ " << sc_time_stamp() << ": request " << i << " sent" << std::endl;
+            LOG << "request " << i << " sent";
             i++;
+            delay(1);
         }
     }
 
     void thread_2() {
         while (true) {
-            wait(half_cycle);
+            advance_to_read();
             if (p_dram_resp->nb_readable()) {
                 uint64_t addr = p_dram_resp->read();
-                std::cout << name() << " @ " << sc_time_stamp() << ": response " << addr << " received" << std::endl;
+                LOG << "response " << addr << " received";
             }
-            wait(half_cycle);
+            delay(1);
         }
     }
 };
@@ -42,15 +42,15 @@ int sc_main(int, char **) {
     cpu m_cpu("m_cpu");
 
     // channel instantiation
-    sync_fifo<uint64_t, 8> f_dram_req("f_dram_req");
+    blocking<uint64_t> b_dram_req("b_dram_req");
     blocking<uint64_t> b_dram_resp("b_dram_resp");
 
     // link dram
-    m_dram.p_rtcore_req(f_dram_req);
+    m_dram.p_rtcore_req(b_dram_req);
     m_dram.p_rtcore_resp(b_dram_resp);
 
     // link req_generator
-    m_cpu.p_dram_req(f_dram_req);
+    m_cpu.p_dram_req(b_dram_req);
     m_cpu.p_dram_resp(b_dram_resp);
 
     sc_start(1000 * cycle);

@@ -4,6 +4,7 @@
 #include <bvh/node_intersectors.hpp>
 #include <bvh/bvh.hpp>
 #include "../params.hpp"
+#include "../utility.hpp"
 
 SC_MODULE(hp) {
     sync_fifo_in<bbox_req_t, num_hp> p_bbox_ctrl;
@@ -15,11 +16,9 @@ SC_MODULE(hp) {
 
     void thread_1() {
         while (true) {
-            wait(cycle);
             bbox_req_t req[num_hp];
             p_bbox_ctrl->read(req);
-
-            wait(hp_latency * cycle);
+            delay(hp_latency);
             trv_ctrl_req_t trv_ctrl_req[num_hp];
             for (int i = 0; i < num_hp; i++) {
                 trv_ctrl_req[i] = {

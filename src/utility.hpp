@@ -1,6 +1,11 @@
 #ifndef RTCORE_SYSTEMC_UTILITY_HPP
 #define RTCORE_SYSTEMC_UTILITY_HPP
 
+#include <bvh/ray.hpp>
+#include <bvh/triangle.hpp>
+#include "params.hpp"
+#include "payload_t.hpp"
+
 bvh::Ray<float> to_bvh_ray(const ray_t &ray) {
     return {
         {ray.origin[0], ray.origin[1], ray.origin[2]},
@@ -18,42 +23,110 @@ bvh::Triangle<float> to_bvh_triangle(const trig_t &trig) {
     };
 }
 
-#define ASSERT_ON_NEGEDGE()                                                \
-    do {                                                                   \
-        if (sc_time_stamp().value() % cycle.value() != half_cycle.value()) \
-            SC_REPORT_FATAL(name(), "negedge assertion failed");           \
-    } while (false)
+enum class phase_t {
+    WRITE, READ, UPDATE
+};
 
-#define ASSERT_ON_POSEDGE()                                      \
-    do {                                                         \
-        if (sc_time_stamp().value() % cycle.value() != 0)        \
-            SC_REPORT_FATAL(name(), "posedge assertion failed"); \
-    } while (false)
+phase_t curr_phase() {
+    auto phase_val = sc_time_stamp().value() % cycle.value();
+    switch (phase_val) {
+        case 0:
+            return phase_t::WRITE;
+        case 1:
+            return phase_t::READ;
+        case 2:
+            return phase_t::UPDATE;
+        default:
+            SC_REPORT_FATAL("timing", "unknown phase");
+            exit(EXIT_FAILURE);
+    }
+}
 
-#define ADVANCE_TO_NEGEDGE()                                  \
-    do {                                                      \
-        auto phase = sc_time_stamp().value() % cycle.value(); \
-        if (phase == 0)                                       \
-            wait(half_cycle);                                 \
-        else                                                  \
-            ASSERT_ON_NEGEDGE();                              \
-    } while (false)
+std::string curr_time_str() {
+    std::string result = std::to_string(sc_time_stamp().value() / cycle.value()) + ",";
+    switch (curr_phase()) {
+        case phase_t::WRITE:
+            result += "WRITE";
+            break;
+        case phase_t::READ:
+            result += "READ";
+            break;
+        case phase_t::UPDATE:
+            result += "UPDATE";
+            break;
+    }
+    return result;
+}
 
-#define ADVANCE_TO_POSEDGE()                                  \
-    do {                                                      \
-        auto phase = sc_time_stamp().value() % cycle.value(); \
-        if (phase == half_cycle.value())                      \
-            wait(half_cycle);                                 \
-        else                                                  \
-            ASSERT_ON_POSEDGE();                              \
-    } while (false)
+void delay(int num_cycles) {
+    sc_time time_to_advance = (num_cycles - 1) * cycle;
+    switch (curr_phase()) {
+        case phase_t::WRITE:
+            time_to_advance += 3 * phase;
+            break;
+        case phase_t::READ:
+            time_to_advance += 2 * phase;
+            break;
+        case phase_t::UPDATE:
+            time_to_advance += phase;
+            break;
+    }
+    wait(time_to_advance);
+}
 
-#define SHOULD_NOT_BE_BLOCKED( expr )                         \
-    do {                                                      \
-        sc_time time_before_write = sc_time_stamp();          \
-        expr;                                                 \
-        if (sc_time_stamp() - time_before_write >= cycle)     \
-            SC_REPORT_FATAL(name(), "should not be blocked"); \
-    } while (false)
+void advance_to_write() {
+    switch (curr_phase()) {
+        case phase_t::WRITE:
+            break;
+        case phase_t::READ:
+            SC_REPORT_FATAL("timing", "cannot advance to WRITE phase (curr phase == READ)");
+            break;
+        case phase_t::UPDATE:
+            SC_REPORT_FATAL("timing", "cannot advance to WRITE phase (curr phase == UPDATE)");
+            break;
+    }
+}
+
+void advance_to_read() {
+    switch (curr_phase()) {
+        case phase_t::WRITE:
+            wait(phase);
+            break;
+        case phase_t::READ:
+            break;
+        case phase_t::UPDATE:
+            SC_REPORT_FATAL("timing", "cannot advance to READ phase (curr phase == UPDATE)");
+            break;
+    }
+}
+
+void advance_to_update() {
+    switch (curr_phase()) {
+        case phase_t::WRITE:
+            wait(2 * phase);
+            break;
+        case phase_t::READ:
+            wait(phase);
+            break;
+        case phase_t::UPDATE:
+            break;
+    }
+}
+
+void assert_on_read() {
+    if (curr_phase() != phase_t::READ)
+        SC_REPORT_FATAL("timing", "read phase assertion failed");
+}
+
+void assert_on_write() {
+    if (curr_phase() != phase_t::WRITE)
+        SC_REPORT_FATAL("timing", "write phase assertion failed");
+}
+
+struct endl_printer {
+    ~endl_printer() { std::cout << std::endl; }
+};
+
+#define LOG (endl_printer(), std::cout << name() << " @ " << curr_time_str() << ": ")
 
 #endif //RTCORE_SYSTEMC_UTILITY_HPP

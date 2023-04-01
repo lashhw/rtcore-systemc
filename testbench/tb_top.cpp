@@ -13,7 +13,8 @@ int sc_main(int, char **) {
 
     // link dram
     m_dram.p_rtcore_req(m_rtcore.p_dram_req);
-    m_dram.p_rtcore_resp(m_rtcore.p_dram_resp);
+    m_dram.p_rtcore_resp_1(m_rtcore.p_dram_resp_1);
+    m_dram.p_rtcore_resp_2(m_rtcore.p_dram_resp_2);
 
     // link shader
     m_shader.p_rtcore_ray(m_rtcore.p_shader_ray);

@@ -3,9 +3,10 @@
 
 #include "../blocking.hpp"
 #include "../params.hpp"
+#include "../utility.hpp"
 
 template<typename T, int num_slaves>
-struct arbiter : public sc_module {
+SC_MODULE(arbiter) {
     blocking_in<T> p_slave[num_slaves];
     blocking_out<T> p_master;
 
@@ -14,30 +15,24 @@ struct arbiter : public sc_module {
     }
 
     void thread_1() {
-        sc_event_or_list data_written_event_list;
-        for (int i = 0; i < num_slaves; i++)
-            data_written_event_list |= p_slave[i]->data_written_event();
-        int first = 0;
-
+        int first_priority = 0;
         while (true) {
-            wait(cycle);
-            bool has_data_written = false;
-            for (int i = 0; i < num_slaves; i++) {
-                if (p_slave[i]->nb_readable()) {
-                    has_data_written = true;
+            advance_to_read();
+            int chosen = -1;
+            for (int i = 0, candidate = first_priority; i < num_slaves; i++, candidate = (candidate + 1) % num_slaves) {
+                if (p_slave[candidate]->nb_readable()) {
+                    chosen = candidate;
                     break;
                 }
             }
-            if (!has_data_written)
-                wait(data_written_event_list);
-
-            wait(half_cycle);
-            int chosen = first;
-            for (; !p_slave[chosen]->nb_readable(); chosen = (chosen + 1) % num_slaves);
-            wait(half_cycle);
-            T req = p_slave[chosen]->read();
-            p_master->write(req);
-            first = (first + 1) % num_slaves;
+            if (chosen != -1) {
+                T req = p_slave[chosen]->read();
+                delay(1);
+                p_master->write(req);
+                first_priority = (first_priority + 1) % num_slaves;
+            } else {
+                delay(1);
+            }
         }
     }
 };

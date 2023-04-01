@@ -3,22 +3,22 @@
 
 #include "../blocking.hpp"
 #include "../params.hpp"
+#include "../utility.hpp"
 
-// input interface for sync_fifo
+// read interface for sync_fifo
 template <typename T, int num_read>
 class sync_fifo_in_if : public blocking_in_if<T> {
 public:
-    virtual const int &num_elements() const = 0;
     virtual void read(T *) = 0;
 };
 
-// output interface for sync_fifo
+// write interface for sync_fifo
 template <typename T, int num_write>
 class sync_fifo_out_if : public blocking_out_if<T> {
 public:
+    virtual bool nb_writable() = 0;
     using blocking_out_if<T>::write;
     virtual void write(const T *) = 0;
-    virtual bool nb_writable() = 0;
 };
 
 // alias for sc_port<sync_fifo_in_if<T, num_read>>
@@ -35,139 +35,96 @@ class sync_fifo : public sc_channel,
                   public sync_fifo_in_if<T, num_read>,
                   public sync_fifo_out_if<T, num_write> {
 public:
-    enum state_t {
-        UTILIZE, STARVE, STALL
-    };
-
     SC_CTOR(sync_fifo) {
         curr = 0;
         size = 0;
         read_granted_flag = false;
         write_granted_flag = false;
-        last_state = UTILIZE;
-        last_state_time = sc_time();
-        utilize_duration = sc_time();
-        starve_duration = sc_time();
-        stall_duration = sc_time();
-        SC_THREAD(main_thread);
+
+        SC_THREAD(thread_1);
     }
 
     ~sync_fifo() override {
+        std::string mn = name();
         if (size > 0)
-            std::cerr << name() << " still contains data" << std::endl;
-        update_state(UTILIZE);
-        std::cout << name() << ": UTILIZE " << utilize_duration << std::endl;
-        std::cout << name() << ": STARVE " << starve_duration << std::endl;
-        std::cout << name() << ": STALL " << stall_duration << std::endl;
-    }
-
-    const sc_event &data_written_event() const override {
-        return write_updated;
+            SC_REPORT_WARNING("communication", ("fifo still contains data in " + mn).c_str());
     }
 
     bool nb_readable() const override {
-        return num_elements() > 0;
+        assert_on_read();
+        return size > 0;
     }
 
-    const int &num_elements() const override {
-        return size;
-    }
-
-    // blocking read
     void read(T *val) override {
-        if (size < num_read) {
-            update_state(STARVE);
-            while (size < num_read)
-                wait(write_updated);
-            update_state(UTILIZE);
+        while (size < num_read) {
+            wait(write_updated);
+            delay(1);
         }
+        advance_to_read();
         for (int i = 0; i < num_read; i++)
             val[i] = data[(curr+i)%max_size];
         read_granted_flag = true;
         read_granted.notify();
     }
 
-    // this method should only be used when num_read = 1
     T read() override {
-        sc_assert(num_read == 1);
+        if (num_read != 1)
+            SC_REPORT_FATAL("other", "read() should only be used when num_read == 1");
         T tmp;
         read(&tmp);
         return tmp;
     }
 
-    T peek() override {
-        SC_REPORT_FATAL(name(), "peek() has not implemented");
-        return T();
+    bool nb_writable() override {
+        assert_on_write();
+        return max_size - size >= num_write;
     }
 
-    // blocking write
     void write(const T *val) override {
-        if (max_size - size < num_write) {
-            update_state(STALL);
-            while (max_size - size < num_write)
-                wait(read_updated);
-            update_state(UTILIZE);
+        while (max_size - size < num_write) {
+            wait(read_updated);
+            delay(1);
         }
+        advance_to_write();
         for (int i = 0; i < num_write; i++)
             write_data[i] = val[i];
         write_granted_flag = true;
         write_granted.notify();
     }
 
-    // this method should only be used when num_write = 1
     void write(const T &val) override {
-        sc_assert(num_write == 1);
+        if (num_write != 1)
+            SC_REPORT_FATAL("other", "write(const T &) should only be used when num_write == 1");
         write(&val);
     }
 
-    // this fifo can be written without blocking
-    bool nb_writable() override {
-        return max_size - size >= num_write;
-    }
-
-    // direct write
     void direct_write(const T *val) {
-        sc_assert(max_size - size >= num_write);
+        if (max_size - size < num_write)
+            SC_REPORT_FATAL("other", "fifo does not have enough space");
         for (int i = 0; i < num_write; i++) {
             data[(curr+size)%max_size] = val[i];
             size++;
         }
     }
 
-    // this method should only be used when num_write = 1
     void direct_write(const T &val) {
-        sc_assert(num_write == 1);
+        if (num_write != 1)
+            SC_REPORT_FATAL("other", "direct_write(const T &) should only be used when num_write == 1");
         direct_write(&val);
     }
 
-    void update_state(state_t new_state) {
-        switch (last_state) {
-            case UTILIZE:
-                utilize_duration += sc_time_stamp() - last_state_time;
-                break;
-            case STARVE:
-                starve_duration += sc_time_stamp() - last_state_time;
-                break;
-            case STALL:
-                stall_duration += sc_time_stamp() - last_state_time;
-                break;
-        }
-        last_state = new_state;
-        last_state_time = sc_time_stamp();
-    }
-
 private:
-    void main_thread() {
+    void thread_1() {
         while (true) {
             wait(read_granted | write_granted);
-            wait(half_cycle);
+            advance_to_update();
 
             // read
             if (read_granted_flag) {
                 curr = (curr + num_read) % max_size;
                 size -= num_read;
                 read_granted_flag = false;
-                read_updated.notify(half_cycle);
+                read_updated.notify();
             }
 
             // write
@@ -177,7 +134,7 @@ private:
                     size++;
                 }
                 write_granted_flag = false;
-                write_updated.notify(half_cycle);
+                write_updated.notify();
             }
         }
     }
@@ -194,12 +151,6 @@ private:
     bool write_granted_flag;
     sc_event write_granted;
     sc_event write_updated;
-
-    state_t last_state;
-    sc_time last_state_time;
-    sc_time utilize_duration;
-    sc_time starve_duration;
-    sc_time stall_duration;
 };
 
 #endif //RTCORE_SYSTEMC_SYNC_FIFO_HPP

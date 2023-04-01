@@ -3,54 +3,48 @@
 
 SC_MODULE(bbox_ctrl) {
     sync_fifo_out<uint64_t> p_dram_req;
-    blocking_in<uint64_t> p_dram_resp;
+    nonblocking_in<uint64_t> p_dram_resp;
     blocking_in<bbox_ctrl_req_t> p_trv_ctrl;
     sync_fifo_out<bbox_req_t> p_lp;
     sync_fifo_out<bbox_req_t> p_hp;
     sc_port<dram_direct_if> p_dram_direct;
 
-    struct {
-        bool valid;
-        bool pending;
-        bool ready;
-        uint64_t addr;
-        int num_remaining;
-        bool lp;
-        bbox_req_t bbox_req;
-    } rb[rb_size];
-    std::queue<int> free_fifo;
-
     SC_CTOR(bbox_ctrl) {
-        for (int i = 0; i < rb_size; i++)
-            free_fifo.push(i);
-
         SC_THREAD(thread_1);
     }
 
     void thread_1() {
+        struct {
+            bool valid;
+            bool pending;
+            bool ready;
+            uint64_t addr;
+            int num_bytes;
+            bool lp;
+            bbox_req_t bbox_req;
+        } rb_entry[rb_size];
+        std::queue<int> free_fifo;
+        for (int i = 0; i < rb_size; i++) {
+            rb_entry[i].valid = false;
+            free_fifo.push(i);
+        }
         while (true) {
-            wait(half_cycle);
-            if (p_dram_resp->nb_readable()) {
+            advance_to_read();
+            if (p_dram_resp->readable()) {
                 uint64_t addr = p_dram_resp->read();
-                wait(half_cycle);
+                delay(1);
                 bool found = false;
-                for (auto &entry : rb) {
+                for (auto &entry : rb_entry) {
                     if (entry.valid && addr == entry.addr) {
                         found = true;
-                        if (entry.num_remaining == 0) {
-                            entry.ready = true;
-                        } else {
-                            entry.pending = true;
-                            entry.addr += 1;
-                            entry.num_remaining--;
-                        }
+                        entry.ready = true;
                         break;
                     }
                 }
-                sc_assert(found);
+                sc_assert(found);  // TODO: remove this
             } else if (p_trv_ctrl->nb_readable() && !free_fifo.empty()) {
                 bbox_ctrl_req_t req = p_trv_ctrl->read();
-                wait(half_cycle);
+                delay(1);
                 bbox_req_t bbox_req = {
                     .ray_and_id = req.ray_and_id
                 };
@@ -63,48 +57,50 @@ SC_MODULE(bbox_ctrl) {
                 addr += 8;
                 bbox_req.right_node = p_dram_direct->direct_get_data(dram_type_t::NODE, addr).node;
                 addr += 8;
-                uint64_t first = req.left_bbox_addr >> 3;
-                uint64_t last = (addr - 1) >> 3;
-                rb[free_fifo.front()] = {
+                rb_entry[free_fifo.front()] = {
                     .valid = true,
                     .pending = true,
                     .ready = false,
-                    .addr = first,
-                    .num_remaining = int(last - first),
+                    .addr = req.left_bbox_addr,
+                    .num_bytes = int(addr - req.left_bbox_addr),
                     .lp = req.left_lp && req.right_lp,
                     .bbox_req = bbox_req
                 };
                 free_fifo.pop();
             } else {
-                wait(half_cycle);
+                delay(1);
                 // check pending bit
-                bool has_pending = false;
-                for (auto &entry : rb) {
-                    if (entry.valid && entry.pending) {
-                        has_pending = true;
-                        if (p_dram_req->nb_writable()) {
-                            p_dram_req->write(entry.addr);
-                            entry.pending = false;
-                        }
+                int pending_idx = -1;
+                for (int i = 0; i < rb_size; i++) {
+                    if (rb_entry[i].valid && rb_entry[i].pending) {
+                        pending_idx = i;
                         break;
                     }
                 }
-                if (has_pending)
+                if (pending_idx != -1 && p_dram_req->nb_writable()) {
+                    p_dram_req->write(rb_entry[pending_idx].addr);
+                    rb_entry[pending_idx].pending = false;
                     continue;
+                }
                 // check ready bit
+                int ready_idx = -1;
                 for (int i = 0; i < rb_size; i++) {
-                    if (rb[i].valid && rb[i].ready) {
-                        if (rb[i].lp && p_lp->nb_writable()) {
-                            p_lp->write(rb[i].bbox_req);
-                            rb[i].valid = false;
-                            free_fifo.push(i);
-                        } else if (!rb[i].lp && p_hp->nb_writable()) {
-                            p_hp->write(rb[i].bbox_req);
-                            rb[i].valid = false;
-                            free_fifo.push(i);
-                        }
+                    if (rb_entry[i].valid && rb_entry[i].ready) {
+                        ready_idx = i;
                         break;
                     }
+                }
+                if (ready_idx != -1) {
+                    if (rb_entry[ready_idx].lp && p_lp->nb_writable()) {
+                        p_lp->write(rb_entry[ready_idx].bbox_req);
+                        rb_entry[ready_idx].valid = false;
+                        free_fifo.push(ready_idx);
+                    } else if (!rb_entry[ready_idx].lp && p_hp->nb_writable()) {
+                        p_hp->write(rb_entry[ready_idx].bbox_req);
+                        rb_entry[ready_idx].valid = false;
+                        free_fifo.push(ready_idx);
+                    }
+                    continue;
                 }
             }
         }

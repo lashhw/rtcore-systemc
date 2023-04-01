@@ -6,7 +6,7 @@
 
 SC_MODULE(ist_ctrl) {
     blocking_out<uint64_t> p_dram_req;
-    blocking_in<uint64_t> p_dram_resp;
+    nonblocking_in<uint64_t> p_dram_resp;
     blocking_in<ist_ctrl_req_t> p_trv_ctrl_in;
     blocking_out<trv_ctrl_req_t> p_trv_ctrl_out;
     blocking_out<ist_req_t> p_ist_out;
@@ -17,10 +17,8 @@ SC_MODULE(ist_ctrl) {
 
     blocking<ist_ctrl_req_t> b_arbiter_to_thread_1;
 
-    SC_HAS_PROCESS(ist_ctrl);
-    ist_ctrl(const sc_module_name &mn) : sc_module(mn),
-                                         m_arbiter("m_arbiter"),
-                                         b_arbiter_to_thread_1("b_arbiter_to_thread_1") {
+    SC_CTOR(ist_ctrl) : m_arbiter("m_arbiter"),
+                        b_arbiter_to_thread_1("b_arbiter_to_thread_1") {
         m_arbiter.p_slave[0](p_trv_ctrl_in);
         m_arbiter.p_slave[1](p_ist_in);
         m_arbiter.p_master(b_arbiter_to_thread_1);
@@ -31,10 +29,8 @@ SC_MODULE(ist_ctrl) {
 
     void thread_1() {
         while (true) {
-            wait(cycle);
             ist_ctrl_req_t ist_ctrl_req = b_arbiter_to_thread_1.read();
-
-            wait(cycle);
+            delay(1);
             if (ist_ctrl_req.num_trigs == 0) {
                 trv_ctrl_req_t trv_ctrl_req = {
                     .type = trv_ctrl_req_t::IST,
@@ -63,7 +59,9 @@ SC_MODULE(ist_ctrl) {
 
     void thread_2() {
         while (true) {
+            advance_to_read();
             p_dram_resp->read();
+            delay(1);
         }
     }
 };

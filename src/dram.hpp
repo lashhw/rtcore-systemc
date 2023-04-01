@@ -12,6 +12,7 @@
 #include "params.hpp"
 #include "payload_t.hpp"
 #include "blocking.hpp"
+#include "nonblocking.hpp"
 #include "utility.hpp"
 
 struct dram_direct_if : virtual public sc_interface {
@@ -22,7 +23,8 @@ struct dram_direct_if : virtual public sc_interface {
 struct dram : public sc_module,
               public dram_direct_if {
     blocking_in<uint64_t> p_rtcore_req;
-    blocking_out<uint64_t> p_rtcore_resp;
+    nonblocking_out<uint64_t> p_rtcore_resp_1;
+    nonblocking_out<uint64_t> p_rtcore_resp_2;
 
     std::unordered_map<uint64_t, void*> addr_map;  // address -> pointer to actual data
     std::vector<bbox_t> bboxes;
@@ -148,20 +150,25 @@ struct dram : public sc_module,
 
     void thread_1() {
         while (true) {
-            // negedge: read request & update counter
-            ADVANCE_TO_NEGEDGE();
+            // read: read request
+            advance_to_read();
             if (p_rtcore_req->nb_readable()) {
                 uint64_t req = p_rtcore_req->read();
                 remaining_cycles.emplace_back(req, dram_latency);
             }
+
+            // update: update counter
+            advance_to_update();
             for (auto &remaining_cycle : remaining_cycles)
                 remaining_cycle.second--;
 
-            // posedge: send response
-            ADVANCE_TO_POSEDGE();
+            // write: send response
+            delay(1);
+            advance_to_write();
             for (auto it = remaining_cycles.begin(); it != remaining_cycles.end(); it++) {
                 if (it->second <= 0) {
-                    SHOULD_NOT_BE_BLOCKED(p_rtcore_resp->write(it->first));
+                    p_rtcore_resp_1->write(it->first);
+                    p_rtcore_resp_2->write(it->first);
                     remaining_cycles.erase(it);
                     break;
                 }

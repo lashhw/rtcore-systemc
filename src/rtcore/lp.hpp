@@ -11,11 +11,9 @@ SC_MODULE(lp) {
 
     void thread_1() {
         while (true) {
-            wait(cycle);
             bbox_req_t req[num_lp];
             p_bbox_ctrl->read(req);
-
-            wait(lp_latency * cycle);
+            delay(lp_latency);
             trv_ctrl_req_t trv_ctrl_req[num_lp];
             for (int i = 0; i < num_lp; i++) {
                 trv_ctrl_req[i] = {

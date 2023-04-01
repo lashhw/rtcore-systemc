@@ -11,11 +11,9 @@ SC_MODULE(ist) {
 
     void thread_1() {
         while (true) {
-            wait(cycle);
             ist_req_t ist_req[num_ist];
             p_ist_ctrl_in->read(ist_req);
-
-            wait(ist_latency * cycle);
+            delay(ist_latency);
             ist_ctrl_req_t ist_ctrl_req[num_ist];
             for (int i = 0; i < num_ist; i++) {
                 ist_ctrl_req[i] = {
