@@ -111,7 +111,6 @@ SC_MODULE(bbox_ctrl) {
                     rb_entry[ready_idx].valid = false;
                     free_fifo.push(ready_idx);
                 }
-                continue;
             }
         }
     }
