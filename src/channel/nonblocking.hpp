@@ -35,17 +35,22 @@ public:
     }
 
     bool readable() {
+        assert_on_read();
         return valid;
     }
 
     T read() {
         assert_on_read();
+        if (!valid)
+            SC_REPORT_FATAL("communication", "nothing can be read");
         has_read = true;
         return data;
     }
 
     void write(const T &val) {
         assert_on_write();
+        if (valid)
+            SC_REPORT_FATAL("communication", "cannot write twice");
         valid = true;
         data = val;
     }

@@ -1,9 +1,6 @@
 #ifndef RTCORE_SYSTEMC_TRV_CTRL_HPP
 #define RTCORE_SYSTEMC_TRV_CTRL_HPP
 
-#include "../misc/payload_t.hpp"
-#include "arbiter.hpp"
-
 SC_MODULE(trv_ctrl) {
     blocking_in<ray_t> p_shader_ray;
     blocking_out<int> p_shader_id;
@@ -97,9 +94,9 @@ SC_MODULE(trv_ctrl) {
                     .u = result[ray_and_id.id].u,
                     .v = result[ray_and_id.id].v
                 };
+                result[ray_and_id.id].intersected = false;
                 f_free_fifo.write(ray_and_id.id);
                 p_shader_result->write(shader_result);
-                result[ray_and_id.id].intersected = false;
             } else {
                 node_t stk_top = stk[ray_and_id.id].top();
                 stk[ray_and_id.id].pop();
@@ -154,6 +151,7 @@ SC_MODULE(trv_ctrl) {
                         result[trv_ctrl_req.ist.ray_and_id.id].u = trv_ctrl_req.ist.u;
                         result[trv_ctrl_req.ist.ray_and_id.id].v = trv_ctrl_req.ist.v;
                     }
+                    delay(1);
                     stk_op(trv_ctrl_req.ist.ray_and_id);
                     break;
                 }

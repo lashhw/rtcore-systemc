@@ -2,7 +2,6 @@
 #define RTCORE_SYSTEMC_SYNC_FIFO_HPP
 
 #include "blocking.hpp"
-#include "../misc/params.hpp"
 #include "../misc/utility.hpp"
 
 // read interface for sync_fifo
@@ -50,7 +49,7 @@ public:
             SC_REPORT_WARNING("communication", ("fifo still contains data in " + mn).c_str());
     }
 
-    bool nb_readable() const override {
+    bool nb_readable() override {
         assert_on_read();
         return size > 0;
     }
@@ -87,7 +86,7 @@ public:
         }
         advance_to_write();
         for (int i = 0; i < num_write; i++)
-            write_data[i] = val[i];
+            data[(curr+size+i)%max_size] = val[i];
         write_granted_flag = true;
         write_granted.notify();
     }
@@ -129,10 +128,7 @@ private:
 
             // write
             if (write_granted_flag) {
-                for (int i = 0; i < num_write; i++) {
-                    data[(curr+size)%max_size] = write_data[i];
-                    size++;
-                }
+                size += num_write;
                 write_granted_flag = false;
                 write_updated.notify();
             }
@@ -147,7 +143,6 @@ private:
     sc_event read_granted;
     sc_event read_updated;
 
-    T write_data[num_write];
     bool write_granted_flag;
     sc_event write_granted;
     sc_event write_updated;

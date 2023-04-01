@@ -1,8 +1,8 @@
 #ifndef RTCORE_SYSTEMC_UTILITY_HPP
 #define RTCORE_SYSTEMC_UTILITY_HPP
 
-#include "bvh/ray.hpp"
-#include "bvh/triangle.hpp"
+#include <bvh/ray.hpp>
+#include <bvh/triangle.hpp>
 #include "params.hpp"
 #include "payload_t.hpp"
 
@@ -42,20 +42,19 @@ phase_t curr_phase() {
     }
 }
 
-std::string curr_time_str() {
-    std::string result = std::to_string(sc_time_stamp().value() / cycle.value()) + ",";
+sc_time::value_type curr_cycle() {
+    return sc_time_stamp().value() / cycle.value();
+}
+
+const char *curr_phase_str() {
     switch (curr_phase()) {
         case phase_t::WRITE:
-            result += "WRITE";
-            break;
+            return "WRITE";
         case phase_t::READ:
-            result += "READ";
-            break;
+            return "READ";
         case phase_t::UPDATE:
-            result += "UPDATE";
-            break;
+            return "UPDATE";
     }
-    return result;
 }
 
 void delay(int num_cycles) {
@@ -115,18 +114,18 @@ void advance_to_update() {
 
 void assert_on_read() {
     if (curr_phase() != phase_t::READ)
-        SC_REPORT_FATAL("timing", "read phase assertion failed");
+        SC_REPORT_FATAL("timing", "READ phase assertion failed");
 }
 
 void assert_on_write() {
     if (curr_phase() != phase_t::WRITE)
-        SC_REPORT_FATAL("timing", "write phase assertion failed");
+        SC_REPORT_FATAL("timing", "WRITE phase assertion failed");
 }
 
 struct endl_printer {
     ~endl_printer() { std::cout << std::endl; }
 };
 
-#define LOG (endl_printer(), std::cout << name() << " @ " << curr_time_str() << ": ")
+#define LOG (endl_printer(), std::cout << name() << " @ " << curr_cycle() << "," << curr_phase_str() << ": ")
 
 #endif //RTCORE_SYSTEMC_UTILITY_HPP

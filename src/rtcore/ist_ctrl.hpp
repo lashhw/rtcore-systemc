@@ -1,9 +1,6 @@
 #ifndef RTCORE_SYSTEMC_IST_CTRL_HPP
 #define RTCORE_SYSTEMC_IST_CTRL_HPP
 
-#include <bvh/triangle.hpp>
-#include "ist.hpp"
-
 SC_MODULE(ist_ctrl) {
     blocking_out<dram_req_t> p_dram_req;
     nonblocking_in<uint64_t> p_dram_resp;
@@ -60,7 +57,8 @@ SC_MODULE(ist_ctrl) {
     void thread_2() {
         while (true) {
             advance_to_read();
-            p_dram_resp->read();
+            if (p_dram_resp->readable())
+                p_dram_resp->read();
             delay(1);
         }
     }

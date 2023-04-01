@@ -2,7 +2,6 @@
 #define RTCORE_SYSTEMC_ARBITER_HPP
 
 #include "../channel/blocking.hpp"
-#include "../misc/params.hpp"
 #include "../misc/utility.hpp"
 
 template<typename T, int num_slaves>

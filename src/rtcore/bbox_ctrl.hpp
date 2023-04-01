@@ -28,20 +28,18 @@ SC_MODULE(bbox_ctrl) {
             rb_entry[i].valid = false;
             free_fifo.push(i);
         }
+
         while (true) {
             advance_to_read();
             if (p_dram_resp->readable()) {
                 uint64_t addr = p_dram_resp->read();
                 delay(1);
-                bool found = false;
                 for (auto &entry : rb_entry) {
                     if (entry.valid && addr == entry.addr) {
-                        found = true;
                         entry.ready = true;
                         break;
                     }
                 }
-                sc_assert(found);  // TODO: remove this
             } else if (p_trv_ctrl->nb_readable() && !free_fifo.empty()) {
                 bbox_ctrl_req_t req = p_trv_ctrl->read();
                 delay(1);

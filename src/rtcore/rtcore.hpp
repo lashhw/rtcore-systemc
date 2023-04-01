@@ -2,10 +2,12 @@
 #define RTCORE_SYSTEMC_RTCORE_HPP
 
 #include "../channel/sync_fifo.hpp"
+#include "arbiter.hpp"
 #include "trv_ctrl.hpp"
 #include "bbox_ctrl.hpp"
 #include "lp.hpp"
 #include "hp.hpp"
+#include "ist.hpp"
 #include "ist_ctrl.hpp"
 
 SC_MODULE(rtcore) {
@@ -78,9 +80,9 @@ SC_MODULE(rtcore) {
         p_shader_result(f_trv_ctrl_to_shader);
 
         // link arbiter
-        m_arbiter.p_master(b_arbiter_to_dram);
         m_arbiter.p_slave[0](f_bbox_ctrl_to_arbiter);
         m_arbiter.p_slave[1](f_ist_ctrl_to_arbiter);
+        m_arbiter.p_master(b_arbiter_to_dram);
 
         // link trv_ctrl
         m_trv_ctrl.p_shader_ray(b_shader_to_trv_ctrl);

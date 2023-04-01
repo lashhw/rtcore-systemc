@@ -2,9 +2,6 @@
 #define RTCORE_SYSTEMC_HP_HPP
 
 #include <bvh/node_intersectors.hpp>
-#include <bvh/bvh.hpp>
-#include "../misc/params.hpp"
-#include "../misc/utility.hpp"
 
 SC_MODULE(hp) {
     sync_fifo_in<bbox_req_t, num_hp> p_bbox_ctrl;

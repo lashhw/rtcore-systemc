@@ -1,6 +1,8 @@
 #ifndef RTCORE_SYSTEMC_LP_HPP
 #define RTCORE_SYSTEMC_LP_HPP
 
+#include <bvh/node_intersectors.hpp>
+
 SC_MODULE(lp) {
     sync_fifo_in<bbox_req_t, num_lp> p_bbox_ctrl;
     sync_fifo_out<trv_ctrl_req_t, num_lp> p_trv_ctrl;
