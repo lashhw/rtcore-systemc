@@ -76,10 +76,9 @@ struct dram : public sc_module,
         primitive_intersector = std::make_shared<bvh::ClosestPrimitiveIntersector<bvh::Bvh<float>, bvh::Triangle<float>, true>>(bvh, bvh_triangles.data());
 
         // calculate lp/hp
-        std::vector<bool> low_precision;
-        HighPrecisionMarker marker(7, 8);
-        marker.mark(bvh, 0.5, 0.45, low_precision);
-        low_precision[0] = false;
+        HighPrecisionMarker marker(mantissa_width, exponent_width);
+        marker.mark(bvh, 0.5, 0.47);
+        bvh.nodes[0].low_precision = false;
 
         // construct dram bbox/node data
         int curr_addr = 0;
@@ -98,15 +97,15 @@ struct dram : public sc_module,
             };
             bboxes.push_back(bbox);
             bbox_addr_map[idx] = curr_addr;
-            curr_addr += low_precision[idx] ? 12 : 24;
+            curr_addr += bvh.nodes[idx].low_precision ? 12 : 24;
         };
         auto construct_node = [&](int idx) {
             node_t node = {};
             if (node.num_trigs == 0) {
                 int left_child_idx = int(bvh.nodes[idx].first_child_or_primitive);
                 int right_child_idx = left_child_idx + 1;
-                node.left_lp = low_precision[left_child_idx];
-                node.right_lp = low_precision[right_child_idx];
+                node.left_lp = bvh.nodes[left_child_idx].low_precision;
+                node.right_lp = bvh.nodes[right_child_idx].low_precision;
             }
             node.num_trigs = int(bvh.nodes[idx].primitive_count);
             nodes.push_back(node);

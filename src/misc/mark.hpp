@@ -43,9 +43,7 @@ struct HighPrecisionMarker {
         return bbox_low;
     }
 
-    void mark(bvh::Bvh<float> &bvh, float t_trav_high, float t_trav_low, std::vector<bool> &low_precision) {
-        low_precision.resize(bvh.node_count);
-
+    void mark(bvh::Bvh<float> &bvh, float t_trav_high, float t_trav_low) {
         std::vector<float> c_high(bvh.node_count);
         std::vector<float> c_low(bvh.node_count);
         auto set_leaf_c = [&](size_t node_idx) {
@@ -139,7 +137,7 @@ struct HighPrecisionMarker {
             auto [curr_idx, high] = stk.top();
             stk.pop();
 
-            low_precision[curr_idx] = !high;
+            bvh.nodes[curr_idx].low_precision = !high;
 
             if (bvh.nodes[curr_idx].is_leaf()) continue;
 
