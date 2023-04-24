@@ -27,15 +27,15 @@ SC_MODULE(lp) {
                     }
                 };
                 bvh::Ray<float> ray = to_bvh_ray(req[i].ray_and_id.ray);
-                bvh::FastNodeIntersector<bvh::Bvh<float>> node_intersector(ray);
+                bvh::MPNodeIntersector<bvh::Bvh<float>, mantissa_width, exponent_width> node_intersector(ray);
                 bvh::Bvh<float>::Node left_node = {};
                 bvh::Bvh<float>::Node right_node = {};
                 for (int j = 0; j < 6; j++) {
                     left_node.bounds[j] = req[i].left_bbox.bounds[j];
                     right_node.bounds[j] = req[i].right_bbox.bounds[j];
                 }
-                std::pair<float, float> t_left = node_intersector.intersect(left_node, ray);
-                std::pair<float, float> t_right = node_intersector.intersect(right_node, ray);
+                std::pair<float, float> t_left = node_intersector.intersect(left_node, ray, true);
+                std::pair<float, float> t_right = node_intersector.intersect(right_node, ray, true);
                 trv_ctrl_req[i].bbox.left_hit = t_left.first <= t_left.second;
                 trv_ctrl_req[i].bbox.right_hit = t_right.first <= t_right.second;
                 trv_ctrl_req[i].bbox.left_first = t_left.first <= t_right.first;

@@ -34,8 +34,8 @@ SC_MODULE(hp) {
                     left_node.bounds[j] = req[i].left_bbox.bounds[j];
                     right_node.bounds[j] = req[i].right_bbox.bounds[j];
                 }
-                std::pair<float, float> t_left = node_intersector.intersect(left_node, ray);
-                std::pair<float, float> t_right = node_intersector.intersect(right_node, ray);
+                std::pair<float, float> t_left = node_intersector.intersect(left_node, ray, false);
+                std::pair<float, float> t_right = node_intersector.intersect(right_node, ray, false);
                 trv_ctrl_req[i].bbox.left_hit = t_left.first <= t_left.second;
                 trv_ctrl_req[i].bbox.right_hit = t_right.first <= t_right.second;
                 trv_ctrl_req[i].bbox.left_first = t_left.first <= t_right.first;
