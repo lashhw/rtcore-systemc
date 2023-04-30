@@ -39,6 +39,8 @@ public:
         size = 0;
         read_granted_flag = false;
         write_granted_flag = false;
+        starve_duration = 0;
+        stall_duration = 0;
 
         SC_THREAD(thread_1);
     }
@@ -47,6 +49,8 @@ public:
         std::string mn = name();
         if (size > 0)
             SC_REPORT_WARNING("communication", ("fifo still contains data in " + mn).c_str());
+        std::cout << name() << ": STARVE " << starve_duration << " cycles" << std::endl;
+        std::cout << name() << ": STALL " << stall_duration << " cycles" << std::endl;
     }
 
     bool readable() override {
@@ -55,11 +59,13 @@ public:
     }
 
     void read(T *val) override {
+        sc_time::value_type start_time = curr_cycle();
         while (size < num_read) {
             wait(write_updated);
             delay(1);
         }
         advance_to_read();
+        starve_duration += curr_cycle() - start_time;
         for (int i = 0; i < num_read; i++)
             val[i] = data[(curr+i)%max_size];
         read_granted_flag = true;
@@ -80,11 +86,13 @@ public:
     }
 
     void write(const T *val) override {
+        sc_time::value_type start_time = curr_cycle();
         while (max_size - size < num_write) {
             wait(read_updated);
             delay(1);
         }
         advance_to_write();
+        stall_duration += curr_cycle() - start_time;
         for (int i = 0; i < num_write; i++)
             data[(curr+size+i)%max_size] = val[i];
         write_granted_flag = true;
@@ -146,6 +154,9 @@ private:
     bool write_granted_flag;
     sc_event write_granted;
     sc_event write_updated;
+
+    sc_time::value_type starve_duration;
+    sc_time::value_type stall_duration;
 };
 
 #endif //RTCORE_SYSTEMC_SYNC_FIFO_HPP
