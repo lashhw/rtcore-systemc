@@ -35,6 +35,7 @@ SC_MODULE(shader) {
             LOG << "ray sent, id=" << id;
             delay(1);
         }
+        sc_stop();
     }
 
     void thread_2() {
