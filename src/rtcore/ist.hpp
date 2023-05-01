@@ -4,9 +4,14 @@
 SC_MODULE(ist) {
     sync_fifo_in<ist_req_t, num_ist> p_ist_ctrl_in;
     sync_fifo_out<ist_ctrl_req_t, num_ist> p_ist_ctrl_out;
+    int num_processed = 0;
 
     SC_CTOR(ist) {
         SC_THREAD(thread_1);
+    }
+
+    ~ist() override {
+        std::cout << "ist processed " << num_processed << " triangles" << std::endl;
     }
 
     void thread_1() {
@@ -34,6 +39,7 @@ SC_MODULE(ist) {
                     ist_ctrl_req[i].v = result->v;
                 }
             }
+            num_processed += num_ist;
             p_ist_ctrl_out->write(ist_ctrl_req);
         }
     }
