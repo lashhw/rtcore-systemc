@@ -77,7 +77,7 @@ struct dram : public sc_module,
 
         // calculate lp/hp
         HighPrecisionMarker marker(mantissa_width, exponent_width);
-        marker.mark(bvh, 0.5, 0.47);
+        marker.mark(bvh, t_trav_high, t_trav_low);
         bvh.nodes[0].low_precision = false;
 
         // construct dram bbox/node data

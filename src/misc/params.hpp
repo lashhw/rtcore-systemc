@@ -10,6 +10,8 @@ constexpr int num_ist = 4;
 
 constexpr mpfr_prec_t mantissa_width = 7;
 constexpr mpfr_exp_t exponent_width = 8;
+constexpr double t_trav_high = 0.5;
+constexpr double t_trav_low = 0.47;
 
 constexpr int dram_latency_per_byte = 5;
 constexpr int lp_latency = 5;
