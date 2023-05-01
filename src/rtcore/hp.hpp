@@ -6,9 +6,14 @@
 SC_MODULE(hp) {
     sync_fifo_in<bbox_req_t, num_hp> p_bbox_ctrl;
     sync_fifo_out<trv_ctrl_req_t, num_hp> p_trv_ctrl;
+    int num_processed = 0;
 
     SC_CTOR(hp) {
         SC_THREAD(thread_1);
+    }
+
+    ~hp() override {
+        std::cout << "hp processed " << num_processed << " nodes" << std::endl;
     }
 
     void thread_1() {
@@ -40,6 +45,7 @@ SC_MODULE(hp) {
                 trv_ctrl_req[i].bbox.right_hit = t_right.first <= t_right.second;
                 trv_ctrl_req[i].bbox.left_first = t_left.first <= t_right.first;
             }
+            num_processed += num_hp;
             p_trv_ctrl->write(trv_ctrl_req);
         }
     }
