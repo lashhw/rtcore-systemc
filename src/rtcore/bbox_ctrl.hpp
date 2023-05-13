@@ -1,9 +1,11 @@
 #ifndef RTCORE_SYSTEMC_BBOX_CTRL_HPP
 #define RTCORE_SYSTEMC_BBOX_CTRL_HPP
 
+#include "l1c.hpp"
+
 SC_MODULE(bbox_ctrl) {
-    sync_fifo_out<dram_req_t> p_dram_req;
-    nonblocking_in<uint64_t> p_dram_resp;
+    blocking_out<bbox_l1c_req_t> p_l1c_req;
+    sync_fifo_in<bbox_l1c_resp_t> p_l1c_resp;
     blocking_in<bbox_ctrl_req_t> p_trv_ctrl;
     sync_fifo_out<bbox_req_t> p_lp;
     sync_fifo_out<bbox_req_t> p_hp;
@@ -11,104 +13,45 @@ SC_MODULE(bbox_ctrl) {
 
     SC_CTOR(bbox_ctrl) {
         SC_THREAD(thread_1);
+        SC_THREAD(thread_2);
     }
 
     void thread_1() {
-        struct rb_entry_t {
-            enum { EMPTY, PENDING, WAITING, READY } status;
-            uint64_t addr;
-            int num_bytes;
-            bool lp;
-            bbox_req_t bbox_req;
-        } rb_entry[rb_size];
-        std::queue<int> free_fifo;
-        for (int i = 0; i < rb_size; i++) {
-            rb_entry[i].status = rb_entry_t::EMPTY;
-            free_fifo.push(i);
-        }
-
         while (true) {
-            advance_to_read();
-            // process WAITING
-            if (p_dram_resp->readable()) {
-                uint64_t addr = p_dram_resp->read();
-                int addr_idx = -1;
-                for (int i = 0; i < rb_size; i++) {
-                    if (rb_entry[i].status == rb_entry_t::WAITING && addr == rb_entry[i].addr) {
-                        addr_idx = i;
-                        break;
-                    }
-                }
-                if (addr_idx != -1) {
-                    delay(1);
-                    rb_entry[addr_idx].status = rb_entry_t::READY;
-                    continue;
-                }
-            }
-            // process EMPTY
-            if (p_trv_ctrl->readable() && !free_fifo.empty()) {
-                bbox_ctrl_req_t req = p_trv_ctrl->read();
-                delay(1);
-                bbox_req_t bbox_req = {
-                    .ray_and_id = req.ray_and_id
-                };
-                uint64_t addr = req.left_bbox_addr;
-                bbox_req.left_bbox = p_dram_direct->direct_get_data(dram_type_t::BBOX, addr).bbox;
-                addr += req.left_lp ? 12 : 24;
-                bbox_req.right_bbox = p_dram_direct->direct_get_data(dram_type_t::BBOX, addr).bbox;
-                addr += req.right_lp ? 12 : 24;
-                bbox_req.left_node = p_dram_direct->direct_get_data(dram_type_t::NODE, addr).node;
-                addr += 8;
-                bbox_req.right_node = p_dram_direct->direct_get_data(dram_type_t::NODE, addr).node;
-                addr += 8;
-                rb_entry[free_fifo.front()] = {
-                    .status = rb_entry_t::PENDING,
-                    .addr = req.left_bbox_addr,
-                    .num_bytes = int(addr - req.left_bbox_addr),
-                    .lp = req.left_lp && req.right_lp,
-                    .bbox_req = bbox_req
-                };
-                free_fifo.pop();
-                continue;
-            }
+            bbox_ctrl_req_t bbox_ctrl_req = p_trv_ctrl->read();
             delay(1);
-            // process PENDING
-            int pending_idx = -1;
-            for (int i = 0; i < rb_size; i++) {
-                if (rb_entry[i].status == rb_entry_t::PENDING) {
-                    pending_idx = i;
-                    break;
+            int num_bytes = (bbox_ctrl_req.left_lp ? 12 : 24) + (bbox_ctrl_req.right_lp ? 12 : 24) + 8 + 8;
+            bbox_l1c_req_t bbox_l1c_req {
+                .addr = bbox_ctrl_req.left_bbox_addr,
+                .num_bytes = num_bytes,
+                .additional = {
+                    .ray_and_id = bbox_ctrl_req.ray_and_id,
+                    .left_lp = bbox_ctrl_req.left_lp,
+                    .right_lp = bbox_ctrl_req.right_lp
                 }
-            }
-            if (pending_idx != -1 && p_dram_req->writable()) {
-                dram_req_t req = {
-                    .addr = rb_entry[pending_idx].addr,
-                    .num_bytes = rb_entry[pending_idx].num_bytes
-                };
-                p_dram_req->write(req);
-                rb_entry[pending_idx].status = rb_entry_t::WAITING;
-                continue;
-            }
-            // process READY
-            int ready_idx = -1;
-            for (int i = 0; i < rb_size; i++) {
-                if (rb_entry[i].status == rb_entry_t::READY) {
-                    ready_idx = i;
-                    break;
-                }
-            }
-            if (ready_idx != -1) {
-                if (rb_entry[ready_idx].lp && p_lp->writable()) {
-                    p_lp->write(rb_entry[ready_idx].bbox_req);
-                    rb_entry[ready_idx].status = rb_entry_t::EMPTY;
-                    free_fifo.push(ready_idx);
-                } else if (!rb_entry[ready_idx].lp && p_hp->writable()) {
-                    p_hp->write(rb_entry[ready_idx].bbox_req);
-                    rb_entry[ready_idx].status = rb_entry_t::EMPTY;
-                    free_fifo.push(ready_idx);
-                }
-            }
+            };
+            p_l1c_req->write(bbox_l1c_req);
         }
+    }
+
+    void thread_2() {
+        advance_to_read();
+        auto [addr, additional] = p_l1c_resp->read();
+        delay(1);
+        bbox_req_t bbox_req = {
+            .ray_and_id = additional.ray_and_id
+        };
+        bbox_req.left_bbox = p_dram_direct->direct_get_data(dram_type_t::BBOX, addr).bbox;
+        addr += additional.left_lp ? 12 : 24;
+        bbox_req.right_bbox = p_dram_direct->direct_get_data(dram_type_t::BBOX, addr).bbox;
+        addr += additional.right_lp ? 12 : 24;
+        bbox_req.left_node = p_dram_direct->direct_get_data(dram_type_t::NODE, addr).node;
+        addr += 8;
+        bbox_req.right_node = p_dram_direct->direct_get_data(dram_type_t::NODE, addr).node;
+        if (additional.left_lp && additional.right_lp)
+            p_lp->write(bbox_req);
+        else
+            p_hp->write(bbox_req);
     }
 };
 

@@ -114,4 +114,32 @@ struct dram_data_t {
     };
 };
 
+template <typename additional_t>
+struct l1c_req_t {
+    uint64_t addr;
+    int num_bytes;
+    additional_t additional;
+};
+
+template <typename additional_t>
+struct l1c_resp_t {
+    uint64_t addr;
+    additional_t additional;
+};
+
+struct bbox_additional_t {
+    ray_and_id_t ray_and_id;
+    bool left_lp;
+    bool right_lp;
+};
+
+struct ist_additional_t {
+    ray_and_id_t ray_and_id;
+};
+
+typedef l1c_req_t<bbox_additional_t> bbox_l1c_req_t;
+typedef l1c_resp_t<bbox_additional_t> bbox_l1c_resp_t;
+typedef l1c_req_t<ist_additional_t> ist_l1c_req_t;
+typedef l1c_resp_t<ist_additional_t> ist_l1c_resp_t;
+
 #endif //RTCORE_SYSTEMC_PAYLOAD_T_HPP

@@ -8,6 +8,7 @@
 template <typename T, int num_read>
 class sync_fifo_in_if : public blocking_in_if<T> {
 public:
+    using blocking_in_if<T>::read;
     virtual void read(T *) = 0;
 };
 
