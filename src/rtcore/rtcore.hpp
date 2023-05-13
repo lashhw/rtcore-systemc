@@ -35,6 +35,7 @@ SC_MODULE(rtcore) {
 
     nonblocking<uint64_t> n_dram_to_bbox_l1c;
     nonblocking<uint64_t> n_dram_to_ist_ctrl;
+    nonblocking<bbox_l1c_resp_t> n_l1c_to_bbox;
 
     sync_fifo<dram_req_t, fifo_size> f_bbox_l1c_to_arbiter;
     sync_fifo<dram_req_t, fifo_size> f_ist_ctrl_to_arbiter;
@@ -48,7 +49,6 @@ SC_MODULE(rtcore) {
     sync_fifo<ist_req_t, fifo_size, num_ist, 1> f_ist_ctrl_to_ist;
     sync_fifo<ist_ctrl_req_t, fifo_size, 1, num_ist> f_ist_to_ist_ctrl;
     sync_fifo<trv_ctrl_req_t, fifo_size> f_ist_ctrl_to_trv_ctrl;
-    sync_fifo<bbox_l1c_resp_t, fifo_size> f_l1c_to_bbox;
 
     SC_CTOR(rtcore) : m_arbiter("m_arbiter"),
                       m_trv_ctrl("m_trv_ctrl"),
@@ -64,6 +64,7 @@ SC_MODULE(rtcore) {
                       b_bbox_to_l1c("b_bbox_to_l1c"),
                       n_dram_to_bbox_l1c("n_dram_to_bbox_l1c"),
                       n_dram_to_ist_ctrl("n_dram_to_ist_ctrl"),
+                      n_l1c_to_bbox("n_l1c_to_bbox"),
                       f_bbox_l1c_to_arbiter("f_bbox_l1c_to_arbiter"),
                       f_ist_ctrl_to_arbiter("f_ist_ctrl_to_arbiter"),
                       f_trv_ctrl_to_bbox_ctrl("f_trv_ctrl_to_bbox_ctrl"),
@@ -75,8 +76,7 @@ SC_MODULE(rtcore) {
                       f_trv_ctrl_to_ist_ctrl("f_trv_ctrl_to_ist_ctrl"),
                       f_ist_ctrl_to_ist("f_ist_ctrl_to_ist"),
                       f_ist_to_ist_ctrl("f_ist_to_ist_ctrl"),
-                      f_ist_ctrl_to_trv_ctrl("f_ist_ctrl_to_trv_ctrl"),
-                      f_l1c_to_bbox("f_l1c_to_bbox") {
+                      f_ist_ctrl_to_trv_ctrl("f_ist_ctrl_to_trv_ctrl") {
         // link export
         p_dram_req(b_arbiter_to_dram);
         p_dram_resp_1(n_dram_to_bbox_l1c);
@@ -103,7 +103,7 @@ SC_MODULE(rtcore) {
 
         // link bbox_ctrl
         m_bbox_ctrl.p_l1c_req(b_bbox_to_l1c);
-        m_bbox_ctrl.p_l1c_resp(f_l1c_to_bbox);
+        m_bbox_ctrl.p_l1c_resp(n_l1c_to_bbox);
         m_bbox_ctrl.p_trv_ctrl(f_trv_ctrl_to_bbox_ctrl);
         m_bbox_ctrl.p_lp(f_bbox_ctrl_to_lp);
         m_bbox_ctrl.p_hp(f_bbox_ctrl_to_hp);
@@ -113,7 +113,7 @@ SC_MODULE(rtcore) {
         m_bbox_l1c.p_dram_req(f_bbox_l1c_to_arbiter);
         m_bbox_l1c.p_dram_resp(n_dram_to_bbox_l1c);
         m_bbox_l1c.p_req(b_bbox_to_l1c);
-        m_bbox_l1c.p_resp(f_l1c_to_bbox);
+        m_bbox_l1c.p_resp(n_l1c_to_bbox);
 
         // link lp
         m_lp.p_bbox_ctrl(f_bbox_ctrl_to_lp);
