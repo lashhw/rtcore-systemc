@@ -55,9 +55,9 @@ SC_MODULE(rtcore) {
     sync_fifo<ist_req_t, fifo_size, num_ist, 1> f_ist_ctrl_to_ist;
     sync_fifo<ist_ctrl_req_t, fifo_size, 1, num_ist> f_ist_to_ist_ctrl;
     sync_fifo<trv_ctrl_req_t, fifo_size> f_ist_ctrl_to_trv_ctrl;
-    sync_fifo<bbox_l1c_resp_t, fifo_size> f_l1c_lp_to_bbox_ctrl;
-    sync_fifo<bbox_l1c_resp_t, fifo_size> f_l1c_hp_to_bbox_ctrl;
-    sync_fifo<ist_l1c_resp_t, fifo_size> f_l1c_to_ist_ctrl;
+    sync_fifo<bbox_req_t, fifo_size> f_l1c_lp_to_bbox_ctrl;
+    sync_fifo<bbox_req_t, fifo_size> f_l1c_hp_to_bbox_ctrl;
+    sync_fifo<ist_req_t, fifo_size> f_l1c_to_ist_ctrl;
 
     SC_CTOR(rtcore) : m_arbiter("m_arbiter"),
                       m_trv_ctrl("m_trv_ctrl"),

@@ -5,9 +5,9 @@
 
 SC_MODULE(bbox_ctrl) {
     blocking_out<bbox_l1c_req_t> p_l1c_lp_req;
-    sync_fifo_in<bbox_l1c_resp_t> p_l1c_lp_resp;
+    sync_fifo_in<bbox_req_t> p_l1c_lp_resp;
     blocking_out<bbox_l1c_req_t> p_l1c_hp_req;
-    sync_fifo_in<bbox_l1c_resp_t> p_l1c_hp_resp;
+    sync_fifo_in<bbox_req_t> p_l1c_hp_resp;
     blocking_in<bbox_ctrl_req_t> p_trv_ctrl;
     sync_fifo_out<bbox_req_t> p_lp;
     sync_fifo_out<bbox_req_t> p_hp;
@@ -49,7 +49,7 @@ SC_MODULE(bbox_ctrl) {
 
     void thread_2() {
         while (true) {
-            auto [addr, additional] = p_l1c_lp_resp->read();
+            auto additional = p_l1c_lp_resp->read();
             delay(1);
             p_lp->write(additional);
         }
@@ -57,7 +57,7 @@ SC_MODULE(bbox_ctrl) {
 
     void thread_3() {
         while (true) {
-            auto [addr, additional] = p_l1c_hp_resp->read();
+            auto additional = p_l1c_hp_resp->read();
             delay(1);
             p_hp->write(additional);
         }

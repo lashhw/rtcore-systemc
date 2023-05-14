@@ -3,7 +3,7 @@
 
 SC_MODULE(ist_ctrl) {
     blocking_out<ist_l1c_req_t> p_l1c_req;
-    sync_fifo_in<ist_l1c_resp_t> p_l1c_resp;
+    sync_fifo_in<ist_req_t> p_l1c_resp;
     blocking_in<ist_ctrl_req_t> p_trv_ctrl_in;
     blocking_out<trv_ctrl_req_t> p_trv_ctrl_out;
     sync_fifo_out<ist_req_t> p_ist_out;
@@ -71,8 +71,7 @@ SC_MODULE(ist_ctrl) {
 
     void thread_3() {
         while (true) {
-            advance_to_read();
-            auto [addr, additional] = p_l1c_resp->read();
+            auto additional = p_l1c_resp->read();
             delay(1);
             p_ist_out->write(additional);
         }
