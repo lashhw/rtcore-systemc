@@ -4,8 +4,10 @@
 #include "l1c.hpp"
 
 SC_MODULE(bbox_ctrl) {
-    blocking_out<bbox_l1c_req_t> p_l1c_req;
-    sync_fifo_in<bbox_l1c_resp_t> p_l1c_resp;
+    blocking_out<bbox_l1c_req_t> p_l1c_lp_req;
+    sync_fifo_in<bbox_l1c_resp_t> p_l1c_lp_resp;
+    blocking_out<bbox_l1c_req_t> p_l1c_hp_req;
+    sync_fifo_in<bbox_l1c_resp_t> p_l1c_hp_resp;
     blocking_in<bbox_ctrl_req_t> p_trv_ctrl;
     sync_fifo_out<bbox_req_t> p_lp;
     sync_fifo_out<bbox_req_t> p_hp;
@@ -14,45 +16,50 @@ SC_MODULE(bbox_ctrl) {
     SC_CTOR(bbox_ctrl) {
         SC_THREAD(thread_1);
         SC_THREAD(thread_2);
+        SC_THREAD(thread_3);
     }
 
     void thread_1() {
         while (true) {
-            bbox_ctrl_req_t bbox_ctrl_req = p_trv_ctrl->read();
+            bbox_ctrl_req_t req = p_trv_ctrl->read();
             delay(1);
-            int num_bytes = (bbox_ctrl_req.left_lp ? 12 : 24) + (bbox_ctrl_req.right_lp ? 12 : 24) + 8 + 8;
-            bbox_l1c_req_t bbox_l1c_req {
-                .addr = bbox_ctrl_req.left_bbox_addr,
-                .num_bytes = num_bytes,
-                .additional = {
-                    .ray_and_id = bbox_ctrl_req.ray_and_id,
-                    .left_lp = bbox_ctrl_req.left_lp,
-                    .right_lp = bbox_ctrl_req.right_lp
-                }
+            bbox_req_t bbox_req = {
+                .ray_and_id = req.ray_and_id
             };
-            p_l1c_req->write(bbox_l1c_req);
+            uint64_t addr = req.left_bbox_addr;
+            bbox_req.left_bbox = p_dram_direct->direct_get_data(dram_type_t::BBOX, addr).bbox;
+            addr += req.left_lp ? 12 : 24;
+            bbox_req.right_bbox = p_dram_direct->direct_get_data(dram_type_t::BBOX, addr).bbox;
+            addr += req.right_lp ? 12 : 24;
+            bbox_req.left_node = p_dram_direct->direct_get_data(dram_type_t::NODE, addr).node;
+            addr += 8;
+            bbox_req.right_node = p_dram_direct->direct_get_data(dram_type_t::NODE, addr).node;
+            addr += 8;
+            bbox_l1c_req_t bbox_l1c_req {
+                .addr = req.left_bbox_addr,
+                .num_bytes = int(addr - req.left_bbox_addr),
+                .additional = bbox_req
+            };
+            if (req.left_lp && req.right_lp)
+                p_l1c_lp_req->write(bbox_l1c_req);
+            else
+                p_l1c_hp_req->write(bbox_l1c_req);
         }
     }
 
     void thread_2() {
         while (true) {
-            advance_to_read();
-            auto [addr, additional] = p_l1c_resp->read();
+            auto [addr, additional] = p_l1c_lp_resp->read();
             delay(1);
-            bbox_req_t bbox_req = {
-                .ray_and_id = additional.ray_and_id
-            };
-            bbox_req.left_bbox = p_dram_direct->direct_get_data(dram_type_t::BBOX, addr).bbox;
-            addr += additional.left_lp ? 12 : 24;
-            bbox_req.right_bbox = p_dram_direct->direct_get_data(dram_type_t::BBOX, addr).bbox;
-            addr += additional.right_lp ? 12 : 24;
-            bbox_req.left_node = p_dram_direct->direct_get_data(dram_type_t::NODE, addr).node;
-            addr += 8;
-            bbox_req.right_node = p_dram_direct->direct_get_data(dram_type_t::NODE, addr).node;
-            if (additional.left_lp && additional.right_lp)
-                p_lp->write(bbox_req);
-            else
-                p_hp->write(bbox_req);
+            p_lp->write(additional);
+        }
+    }
+
+    void thread_3() {
+        while (true) {
+            auto [addr, additional] = p_l1c_hp_resp->read();
+            delay(1);
+            p_hp->write(additional);
         }
     }
 };

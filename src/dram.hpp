@@ -24,6 +24,7 @@ struct dram : public sc_module,
     blocking_in<dram_req_t> p_rtcore_req;
     nonblocking_out<uint64_t> p_rtcore_resp_1;
     nonblocking_out<uint64_t> p_rtcore_resp_2;
+    nonblocking_out<uint64_t> p_rtcore_resp_3;
 
     std::unordered_map<uint64_t, void*> addr_map;  // address -> pointer to actual data
     std::vector<bbox_t> bboxes;
@@ -167,6 +168,7 @@ struct dram : public sc_module,
                 if (it->second <= 0) {
                     p_rtcore_resp_1->write(it->first);
                     p_rtcore_resp_2->write(it->first);
+                    p_rtcore_resp_3->write(it->first);
                     remaining_cycles.erase(it);
                     break;
                 }
