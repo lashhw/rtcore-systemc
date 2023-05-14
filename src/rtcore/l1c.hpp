@@ -6,7 +6,7 @@ SC_MODULE(l1c) {
     sync_fifo_out<dram_req_t> p_dram_req;
     nonblocking_in<uint64_t> p_dram_resp;
     blocking_in<l1c_req_t<additional_t>> p_req;
-    nonblocking_out<l1c_resp_t<additional_t>> p_resp;
+    sync_fifo_out<l1c_resp_t<additional_t>> p_resp;
 
     SC_CTOR(l1c) {
         SC_THREAD(thread_1);
@@ -82,7 +82,7 @@ SC_MODULE(l1c) {
                     break;
                 }
             }
-            if (ready_idx != -1) {
+            if (ready_idx != -1 && p_resp->writable()) {
                 l1c_resp_t<additional_t> resp {
                     .addr = rb_entry[ready_idx].addr,
                     .additional = rb_entry[ready_idx].additional

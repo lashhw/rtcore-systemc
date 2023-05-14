@@ -5,7 +5,7 @@
 
 SC_MODULE(bbox_ctrl) {
     blocking_out<bbox_l1c_req_t> p_l1c_req;
-    nonblocking_in<bbox_l1c_resp_t> p_l1c_resp;
+    sync_fifo_in<bbox_l1c_resp_t> p_l1c_resp;
     blocking_in<bbox_ctrl_req_t> p_trv_ctrl;
     sync_fifo_out<bbox_req_t> p_lp;
     sync_fifo_out<bbox_req_t> p_hp;
@@ -37,26 +37,22 @@ SC_MODULE(bbox_ctrl) {
     void thread_2() {
         while (true) {
             advance_to_read();
-            if (p_l1c_resp->readable()) {
-                auto [addr, additional] = p_l1c_resp->read();
-                delay(1);
-                bbox_req_t bbox_req = {
-                    .ray_and_id = additional.ray_and_id
-                };
-                bbox_req.left_bbox = p_dram_direct->direct_get_data(dram_type_t::BBOX, addr).bbox;
-                addr += additional.left_lp ? 12 : 24;
-                bbox_req.right_bbox = p_dram_direct->direct_get_data(dram_type_t::BBOX, addr).bbox;
-                addr += additional.right_lp ? 12 : 24;
-                bbox_req.left_node = p_dram_direct->direct_get_data(dram_type_t::NODE, addr).node;
-                addr += 8;
-                bbox_req.right_node = p_dram_direct->direct_get_data(dram_type_t::NODE, addr).node;
-                if (additional.left_lp && additional.right_lp)
-                    p_lp->write(bbox_req);
-                else
-                    p_hp->write(bbox_req);
-            } else {
-                delay(1);
-            }
+            auto [addr, additional] = p_l1c_resp->read();
+            delay(1);
+            bbox_req_t bbox_req = {
+                .ray_and_id = additional.ray_and_id
+            };
+            bbox_req.left_bbox = p_dram_direct->direct_get_data(dram_type_t::BBOX, addr).bbox;
+            addr += additional.left_lp ? 12 : 24;
+            bbox_req.right_bbox = p_dram_direct->direct_get_data(dram_type_t::BBOX, addr).bbox;
+            addr += additional.right_lp ? 12 : 24;
+            bbox_req.left_node = p_dram_direct->direct_get_data(dram_type_t::NODE, addr).node;
+            addr += 8;
+            bbox_req.right_node = p_dram_direct->direct_get_data(dram_type_t::NODE, addr).node;
+            if (additional.left_lp && additional.right_lp)
+                p_lp->write(bbox_req);
+            else
+                p_hp->write(bbox_req);
         }
     }
 };
