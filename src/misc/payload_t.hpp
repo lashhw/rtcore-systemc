@@ -133,13 +133,9 @@ struct bbox_additional_t {
     bool right_lp;
 };
 
-struct ist_additional_t {
-    ray_and_id_t ray_and_id;
-};
-
 typedef l1c_req_t<bbox_additional_t> bbox_l1c_req_t;
 typedef l1c_resp_t<bbox_additional_t> bbox_l1c_resp_t;
-typedef l1c_req_t<ist_additional_t> ist_l1c_req_t;
-typedef l1c_resp_t<ist_additional_t> ist_l1c_resp_t;
+typedef l1c_req_t<ist_req_t> ist_l1c_req_t;
+typedef l1c_resp_t<ist_req_t> ist_l1c_resp_t;
 
 #endif //RTCORE_SYSTEMC_PAYLOAD_T_HPP

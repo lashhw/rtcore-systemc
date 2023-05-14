@@ -27,17 +27,19 @@ SC_MODULE(rtcore) {
     ist_ctrl m_ist_ctrl;
     ist m_ist;
     l1c<bbox_additional_t> m_bbox_l1c;
+    l1c<ist_req_t> m_ist_l1c;
 
     blocking<dram_req_t> b_arbiter_to_dram;
     blocking<ray_t> b_shader_to_trv_ctrl;
     blocking<int> b_trv_ctrl_to_shader;
     blocking<bbox_l1c_req_t> b_bbox_to_l1c;
+    blocking<ist_l1c_req_t> b_ist_to_l1c;
 
     nonblocking<uint64_t> n_dram_to_bbox_l1c;
-    nonblocking<uint64_t> n_dram_to_ist_ctrl;
+    nonblocking<uint64_t> n_dram_to_ist_l1c;
 
     sync_fifo<dram_req_t, fifo_size> f_bbox_l1c_to_arbiter;
-    sync_fifo<dram_req_t, fifo_size> f_ist_ctrl_to_arbiter;
+    sync_fifo<dram_req_t, fifo_size> f_ist_l1c_to_arbiter;
     sync_fifo<bbox_ctrl_req_t, fifo_size> f_trv_ctrl_to_bbox_ctrl;
     sync_fifo<bbox_req_t, fifo_size, num_lp, 1> f_bbox_ctrl_to_lp;
     sync_fifo<trv_ctrl_req_t, fifo_size, 1, num_lp> f_lp_to_trv_ctrl;
@@ -49,6 +51,7 @@ SC_MODULE(rtcore) {
     sync_fifo<ist_ctrl_req_t, fifo_size, 1, num_ist> f_ist_to_ist_ctrl;
     sync_fifo<trv_ctrl_req_t, fifo_size> f_ist_ctrl_to_trv_ctrl;
     sync_fifo<bbox_l1c_resp_t, fifo_size> f_l1c_to_bbox;
+    sync_fifo<ist_l1c_resp_t, fifo_size> f_l1c_to_ist;
 
     SC_CTOR(rtcore) : m_arbiter("m_arbiter"),
                       m_trv_ctrl("m_trv_ctrl"),
@@ -58,14 +61,16 @@ SC_MODULE(rtcore) {
                       m_ist_ctrl("m_ist_ctrl"),
                       m_ist("m_ist"),
                       m_bbox_l1c("m_bbox_l1c"),
+                      m_ist_l1c("m_ist_l1c"),
                       b_arbiter_to_dram("b_arbiter_to_dram"),
                       b_shader_to_trv_ctrl("b_shader_to_trv_ctrl"),
                       b_trv_ctrl_to_shader("b_trv_ctrl_to_shader"),
                       b_bbox_to_l1c("b_bbox_to_l1c"),
+                      b_ist_to_l1c("b_ist_to_l1c"),
                       n_dram_to_bbox_l1c("n_dram_to_bbox_l1c"),
-                      n_dram_to_ist_ctrl("n_dram_to_ist_ctrl"),
+                      n_dram_to_ist_l1c("n_dram_to_ist_l1c"),
                       f_bbox_l1c_to_arbiter("f_bbox_l1c_to_arbiter"),
-                      f_ist_ctrl_to_arbiter("f_ist_ctrl_to_arbiter"),
+                      f_ist_l1c_to_arbiter("f_ist_l1c_to_arbiter"),
                       f_trv_ctrl_to_bbox_ctrl("f_trv_ctrl_to_bbox_ctrl"),
                       f_bbox_ctrl_to_lp("f_bbox_ctrl_to_lp"),
                       f_lp_to_trv_ctrl("f_lp_to_trv_ctrl"),
@@ -76,18 +81,19 @@ SC_MODULE(rtcore) {
                       f_ist_ctrl_to_ist("f_ist_ctrl_to_ist"),
                       f_ist_to_ist_ctrl("f_ist_to_ist_ctrl"),
                       f_ist_ctrl_to_trv_ctrl("f_ist_ctrl_to_trv_ctrl"),
-                      f_l1c_to_bbox("f_l1c_to_bbox") {
+                      f_l1c_to_bbox("f_l1c_to_bbox"),
+                      f_l1c_to_ist("f_l1c_to_ist") {
         // link export
         p_dram_req(b_arbiter_to_dram);
         p_dram_resp_1(n_dram_to_bbox_l1c);
-        p_dram_resp_2(n_dram_to_ist_ctrl);
+        p_dram_resp_2(n_dram_to_ist_l1c);
         p_shader_ray(b_shader_to_trv_ctrl);
         p_shader_id(b_trv_ctrl_to_shader);
         p_shader_result(f_trv_ctrl_to_shader);
 
         // link arbiter
         m_arbiter.p_slave[0](f_bbox_l1c_to_arbiter);
-        m_arbiter.p_slave[1](f_ist_ctrl_to_arbiter);
+        m_arbiter.p_slave[1](f_ist_l1c_to_arbiter);
         m_arbiter.p_master(b_arbiter_to_dram);
 
         // link trv_ctrl
@@ -124,13 +130,19 @@ SC_MODULE(rtcore) {
         m_hp.p_trv_ctrl(f_hp_to_trv_ctrl);
 
         // link ist_ctrl
-        m_ist_ctrl.p_dram_req(f_ist_ctrl_to_arbiter);
-        m_ist_ctrl.p_dram_resp(n_dram_to_ist_ctrl);
+        m_ist_ctrl.p_l1c_req(b_ist_to_l1c);
+        m_ist_ctrl.p_l1c_resp(f_l1c_to_ist);
         m_ist_ctrl.p_trv_ctrl_in(f_trv_ctrl_to_ist_ctrl);
         m_ist_ctrl.p_trv_ctrl_out(f_ist_ctrl_to_trv_ctrl);
         m_ist_ctrl.p_ist_out(f_ist_ctrl_to_ist);
         m_ist_ctrl.p_ist_in(f_ist_to_ist_ctrl);
         m_ist_ctrl.p_dram_direct(p_dram_direct);
+
+        // link ist_l1c
+        m_ist_l1c.p_dram_req(f_ist_l1c_to_arbiter);
+        m_ist_l1c.p_dram_resp(n_dram_to_ist_l1c);
+        m_ist_l1c.p_req(b_ist_to_l1c);
+        m_ist_l1c.p_resp(f_l1c_to_ist);
 
         // link ist
         m_ist.p_ist_ctrl_in(f_ist_ctrl_to_ist);
