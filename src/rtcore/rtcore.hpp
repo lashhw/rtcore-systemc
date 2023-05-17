@@ -27,9 +27,9 @@ SC_MODULE(rtcore) {
     hp m_hp;
     ist_ctrl m_ist_ctrl;
     ist m_ist;
-    l1c<bbox_req_t> m_bbox_l1c_lp;
-    l1c<bbox_req_t> m_bbox_l1c_hp;
-    l1c<ist_req_t> m_ist_l1c;
+    l1c<bbox_req_t, l1c_lp_num_entries> m_bbox_l1c_lp;
+    l1c<bbox_req_t, l1c_hp_num_entries> m_bbox_l1c_hp;
+    l1c<ist_req_t, l1c_ist_num_entries> m_ist_l1c;
 
     blocking<dram_req_t> b_arbiter_to_dram;
     blocking<ray_t> b_shader_to_trv_ctrl;
