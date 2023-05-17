@@ -15,6 +15,7 @@ int sc_main(int, char **) {
     m_dram.p_rtcore_req(m_rtcore.p_dram_req);
     m_dram.p_rtcore_resp_1(m_rtcore.p_dram_resp_1);
     m_dram.p_rtcore_resp_2(m_rtcore.p_dram_resp_2);
+    m_dram.p_rtcore_resp_3(m_rtcore.p_dram_resp_3);
 
     // link shader
     m_shader.p_rtcore_ray(m_rtcore.p_shader_ray);

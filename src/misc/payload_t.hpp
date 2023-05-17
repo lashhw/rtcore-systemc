@@ -114,4 +114,14 @@ struct dram_data_t {
     };
 };
 
+template <typename additional_t>
+struct l1c_req_t {
+    uint64_t addr;
+    int num_bytes;
+    additional_t additional;
+};
+
+typedef l1c_req_t<bbox_req_t> bbox_l1c_req_t;
+typedef l1c_req_t<ist_req_t> ist_l1c_req_t;
+
 #endif //RTCORE_SYSTEMC_PAYLOAD_T_HPP
