@@ -46,7 +46,6 @@ struct bbox_ctrl_req_t {
     uint64_t left_bbox_addr;
 };
 
-
 struct trv_ctrl_req_t {
     enum { SHADER, BBOX, IST } type;
     union {
