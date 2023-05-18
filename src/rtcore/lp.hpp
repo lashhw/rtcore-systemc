@@ -24,12 +24,12 @@ SC_MODULE(lp) {
             trv_ctrl_req_t trv_ctrl_req[num_lp];
             for (int i = 0; i < num_lp; i++) {
                 trv_ctrl_req[i] = {
-                    .type = trv_ctrl_req_t::BBOX,
-                    .bbox = {
-                        .ray_and_id = req[i].ray_and_id,
-                        .left_node = req[i].left_node,
-                        .right_node = req[i].right_node
-                    }
+                    .type = trv_ctrl_req_t::BBOX
+                };
+                trv_ctrl_req[i].bbox = {
+                    .ray_and_id = req[i].ray_and_id,
+                    .left_node = req[i].left_node,
+                    .right_node = req[i].right_node
                 };
                 bvh::Ray<float> ray = to_bvh_ray(req[i].ray_and_id.ray);
                 bvh::MPNodeIntersector<bvh::Bvh<float>, mantissa_width, exponent_width> node_intersector(ray);
