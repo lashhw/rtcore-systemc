@@ -10,8 +10,17 @@ SC_MODULE(l1c) {
     blocking_in<l1c_req_t<additional_t>> p_req;
     sync_fifo_out<additional_t> p_resp;
 
+    int miss = 0;
+    int hit = 0;
+
     SC_CTOR(l1c) {
         SC_THREAD(thread_1);
+    }
+
+    ~l1c() {
+        std::cout << name() << ":" << std::endl;
+        std::cout << "miss = " << miss << std::endl;
+        std::cout << "hit = " << hit << std::endl;
     }
 
     void thread_1() {
@@ -68,6 +77,7 @@ SC_MODULE(l1c) {
                 auto it = cache_map.find(addr);
                 if (it == cache_map.end()) {
                     // cache miss
+                    miss++;
                     rb_entry[free_fifo.front()] = {
                         .status = rb_entry_t::PENDING,
                         .addr = addr,
@@ -76,6 +86,7 @@ SC_MODULE(l1c) {
                     };
                 } else {
                     // cache hit
+                    hit++;
                     cache_list.splice(cache_list.begin(), cache_list, it->second);
                     rb_entry[free_fifo.front()] = {
                         .status = rb_entry_t::READY,
