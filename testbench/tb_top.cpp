@@ -5,10 +5,15 @@ using namespace sc_core;
 #include "../src/shader.hpp"
 #include "../src/rtcore/rtcore.hpp"
 
-int sc_main(int, char **) {
+int sc_main(int argc, char *argv[]) {
+    if (argc != 3) {
+        std::cout << "usage: ./tb_top [model.ply] [ray_queries.bin]" << std::endl;
+        return EXIT_FAILURE;
+    }
+
     // module instantiation
-    dram m_dram("m_dram", "kitchen.ply");
-    shader m_shader("m_shader", "ray_queries.bin");
+    dram m_dram("m_dram", argv[1]);
+    shader m_shader("m_shader", argv[2]);
     rtcore m_rtcore("m_rtcore");
 
     // link dram
