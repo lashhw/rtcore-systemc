@@ -27,12 +27,14 @@ SC_MODULE(shader) {
 
     void thread_1() {
         float r[7];
+        uint64_t count = 0;
         while (ray_queries_file.read(reinterpret_cast<char*>(&r), 7*sizeof(float))) {
+            count++;
             ray_t ray{r[0], r[1], r[2], r[3], r[4], r[5], 0.0f, r[6]};
             p_rtcore_ray->write(ray);
             int id = p_rtcore_id->read();
             p_dram_direct->direct_traverse(ray, answer[id].intersected, answer[id].t, answer[id].u, answer[id].v);
-            LOG << "ray sent, id=" << id;
+            LOG << "ray sent, id=" << id << " (count=" << count << ")";
             delay(1);
         }
         sc_stop();
