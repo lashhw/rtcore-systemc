@@ -6,10 +6,27 @@ using namespace sc_core;
 #include "../src/rtcore/rtcore.hpp"
 
 int sc_main(int argc, char *argv[]) {
-    if (argc != 3) {
-        std::cout << "usage: ./tb_top [model.ply] [ray_queries.bin]" << std::endl;
+    if (argc < 3) {
+        std::cout << "usage: ./tb_top MODEL_PLY RAY_QUERIES [LP_L1C_ENTRIES] [HP_L1C_ENTRIES] [IST_L1C_ENTRIES] [T_TRAV_HIGH] [T_TRAV_LOW]" << std::endl;
         return EXIT_FAILURE;
     }
+
+    if (argc >= 4)
+        l1c_lp_num_entries = atoi(argv[3]);
+    if (argc >= 5)
+        l1c_hp_num_entries = atoi(argv[4]);
+    if (argc >= 6)
+        l1c_ist_num_entries = atoi(argv[5]);
+    if (argc >= 7)
+        t_trav_high = atof(argv[6]);
+    if (argc >= 8)
+        t_trav_low = atof(argv[7]);
+
+    std::cout << "l1c_lp_num_entries = " << l1c_lp_num_entries << std::endl;
+    std::cout << "l1c_hp_num_entries = " << l1c_hp_num_entries << std::endl;
+    std::cout << "l1c_ist_num_entries = " << l1c_ist_num_entries << std::endl;
+    std::cout << "t_trav_high = " << t_trav_high << std::endl;
+    std::cout << "t_trav_low = " << t_trav_low << std::endl;
 
     // module instantiation
     dram m_dram("m_dram", argv[1]);

@@ -3,17 +3,20 @@
 
 #include <list>
 
-template <typename additional_t, int num_entries>
+template <typename additional_t>
 SC_MODULE(l1c) {
     sync_fifo_out<dram_req_t> p_dram_req;
     nonblocking_in<uint64_t> p_dram_resp;
     blocking_in<l1c_req_t<additional_t>> p_req;
     sync_fifo_out<additional_t> p_resp;
 
+    int num_entries;
     int miss = 0;
     int hit = 0;
 
-    SC_CTOR(l1c) {
+    SC_HAS_PROCESS(l1c);
+    l1c(const sc_module_name &mn, int num_entries)
+        : sc_module(mn), num_entries(num_entries) {
         SC_THREAD(thread_1);
     }
 
