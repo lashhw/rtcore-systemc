@@ -22,7 +22,7 @@ SC_MODULE(lp) {
         while (true) {
             // read: read request
             advance_to_read();
-            if (p_bbox_ctrl->readable()) {
+            if (processing.size() < num_lp && p_bbox_ctrl->readable()) {
                 bbox_req_t bbox_req = p_bbox_ctrl->read();
                 trv_ctrl_req_t trv_ctrl_req = {
                     .type = trv_ctrl_req_t::BBOX

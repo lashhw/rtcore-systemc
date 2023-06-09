@@ -20,7 +20,7 @@ SC_MODULE(ist) {
         while (true) {
             // read: read request
             advance_to_read();
-            if (p_ist_ctrl_in->readable()) {
+            if (processing.size() < num_ist && p_ist_ctrl_in->readable()) {
                 ist_req_t ist_req = p_ist_ctrl_in->read();
                 ist_ctrl_req_t ist_ctrl_req = {
                     .ray_and_id = ist_req.ray_and_id,
