@@ -53,7 +53,7 @@ SC_MODULE(lp) {
             // update: update counter
             advance_to_update();
             for (auto &p : processing)
-                p.second = std::min(p.second, p.second - 1);
+                p.second = std::max(0, p.second - 1);
 
             // write: send response
             delay(1);
