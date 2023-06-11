@@ -4,9 +4,6 @@
 constexpr int num_working_rays = 32;
 constexpr int fifo_size = 32;
 constexpr int rb_size = 32;
-constexpr int num_lp = 4;
-constexpr int num_hp = 4;
-constexpr int num_ist = 1;
 
 int l1c_lp_num_entries = 512;  // 512 * 40 = 20 KiB
 int l1c_hp_num_entries = 512;  // 512 * 64 = 32 KiB
@@ -16,6 +13,10 @@ constexpr mpfr_prec_t mantissa_width = 7;
 constexpr mpfr_exp_t exponent_width = 8;
 double t_trav_high = 0.5;
 double t_trav_low = 0.47;
+
+int num_lp = 4;
+int num_hp = 4;
+int num_ist = 1;
 
 constexpr int dram_latency_per_byte = 5;
 constexpr int lp_latency = 20;

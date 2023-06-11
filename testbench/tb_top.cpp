@@ -7,7 +7,7 @@ using namespace sc_core;
 
 int sc_main(int argc, char *argv[]) {
     if (argc < 3) {
-        std::cout << "usage: ./tb_top MODEL_PLY RAY_QUERIES [LP_L1C_ENTRIES] [HP_L1C_ENTRIES] [IST_L1C_ENTRIES] [T_TRAV_HIGH] [T_TRAV_LOW]" << std::endl;
+        std::cout << "usage: ./tb_top MODEL_PLY RAY_QUERIES [LP_L1C_ENTRIES] [HP_L1C_ENTRIES] [IST_L1C_ENTRIES] [T_TRAV_HIGH] [T_TRAV_LOW] [NUM_LP] [NUM_HP] [NUM_IST]" << std::endl;
         return EXIT_FAILURE;
     }
 
@@ -21,12 +21,21 @@ int sc_main(int argc, char *argv[]) {
         t_trav_high = atof(argv[6]);
     if (argc >= 8)
         t_trav_low = atof(argv[7]);
+    if (argc >= 9)
+        num_lp = atoi(argv[8]);
+    if (argc >= 10)
+        num_hp = atoi(argv[9]);
+    if (argc >= 11)
+        num_ist = atoi(argv[10]);
 
     std::cout << "l1c_lp_num_entries = " << l1c_lp_num_entries << std::endl;
     std::cout << "l1c_hp_num_entries = " << l1c_hp_num_entries << std::endl;
     std::cout << "l1c_ist_num_entries = " << l1c_ist_num_entries << std::endl;
     std::cout << "t_trav_high = " << t_trav_high << std::endl;
     std::cout << "t_trav_low = " << t_trav_low << std::endl;
+    std::cout << "num_lp = " << num_lp << std::endl;
+    std::cout << "num_hp = " << num_hp << std::endl;
+    std::cout << "num_ist = " << num_ist << std::endl;
 
     // module instantiation
     dram m_dram("m_dram", argv[1]);
